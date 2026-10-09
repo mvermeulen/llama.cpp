@@ -64,9 +64,11 @@ def bench_ollama(args, model, prompt):
     try:
         res = measure(run_once, prompt, args.runs)
         # size_vram / size tells if Ollama put the model on the GPU
+        # /api/ps reports a model without a tag as "<name>:latest"
+        full_name = model if ":" in model else model + ":latest"
         where = "?"
         for m in get(host + "/api/ps").get("models", []):
-            if m.get("name") == model or m.get("model") == model:
+            if full_name in (m.get("name"), m.get("model")):
                 gpu = m.get("size_vram", 0) / max(m.get("size", 1), 1)
                 where = "CPU" if gpu < 0.01 else "GPU %.0f%%" % (gpu * 100)
         res["device"] = where
