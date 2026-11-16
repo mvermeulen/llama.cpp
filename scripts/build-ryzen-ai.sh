@@ -8,7 +8,7 @@
 #   -c, --clean        remove the build dir first
 #   -j, --jobs N       parallel build jobs (default: nproc)
 #   -B, --build-dir D  build dir (default: build-rocm)
-#   -a, --arch GFX     GPU target, e.g. gfx1152 (default: auto-detect)
+#   -a, --arch GFX     GPU target, e.g. gfx1151, gfx1152 (default: auto-detect)
 #       --lto          enable link time optimization for the CPU code
 #       --tests        also build tests
 #   -h, --help         show this help
@@ -66,7 +66,7 @@ if [ -z "${GPU_ARCH}" ]; then
     fi
 fi
 if [ -z "${GPU_ARCH}" ]; then
-    echo "error: no AMD GPU found, pass --arch (e.g. --arch gfx1152)" >&2
+    echo "error: no AMD GPU found, pass --arch (e.g. --arch gfx1151)" >&2
     exit 1
 fi
 
@@ -109,9 +109,13 @@ cat <<EOF
 Build done: ${BUILD_DIR}/bin
 
 Runtime tips for this APU:
-  - The iGPU shares system RAM. Let it allocate beyond the BIOS carve-out with:
+  - The iGPU shares system RAM. If the model does not fit in the BIOS carve-out, let it allocate beyond it with:
       export GGML_CUDA_ENABLE_UNIFIED_MEMORY=1
+    With a large carve-out (e.g. 96-160 GiB on Strix Halo) this is not needed.
   - Offload all layers to the iGPU: -ngl 99
+  - Always use flash attention: -fa on
+  - Faster long prompts: -ub 2048 -b 2048 (+11% on gpt-oss-20b on gfx1151)
+  - On gfx1151 the Vulkan build is faster (~15% prompt, ~9% generation), see scripts/build-ryzen-ai-vulkan.sh
   - For CPU work use the physical core count: -t $(lscpu -p=CORE | grep -v '^#' | sort -u | wc -l)
-  - Compare backends/threads with: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 0,99 -t 4,8
+  - Compare settings with: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1 -ub 512,2048 -p 512,4096
 EOF
