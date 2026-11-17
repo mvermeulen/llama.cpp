@@ -115,7 +115,7 @@ Runtime tips for this APU:
   - Offload all layers to the iGPU: -ngl 99
   - Always use flash attention: -fa on
   - Faster long prompts: -ub 2048 -b 2048 (+7-19% on gfx1151, depending on model)
-  - On gfx1151 Vulkan generates 4-9% faster; prompt speed is model dependent, see scripts/build-ryzen-ai-vulkan.sh
+  - On gfx1151 Vulkan generates 4-12% faster; prompt speed is model dependent, see scripts/build-ryzen-ai-vulkan.sh
   - For CPU work use the physical core count: -t $(lscpu -p=CORE | grep -v '^#' | sort -u | wc -l)
   - Compare settings with: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1 -ub 512,2048 -p 512,4096
 EOF
