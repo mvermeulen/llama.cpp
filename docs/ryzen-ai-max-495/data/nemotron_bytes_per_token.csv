@@ -1,0 +1,5 @@
+file,part,gb,types
+llama.cpp (unsloth UD-Q4_K_M),Dense layers read every token,7.53,Q8_0
+llama.cpp (unsloth UD-Q4_K_M),Routed experts read per token (22 of 512),3.18,Q5_1 / Q4_K
+Ollama (Q4_K_M),Dense layers read every token,4.26,Q4_K
+Ollama (Q4_K_M),Routed experts read per token (22 of 512),3.44,Q4_K / Q8_0 / Q5_0

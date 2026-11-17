@@ -120,13 +120,15 @@ def bench_llama(args, server_bin, extra, prompt, log_path):
 
 
 def default_llama_configs():
+    # recommended GPU settings for Ryzen AI APUs, see scripts/build-ryzen-ai*.sh
+    gpu = ["-ngl", "99", "-ub", "2048", "-b", "2048"]
     configs = []
     vulkan = os.path.join(ROOT_DIR, "build-vulkan", "bin", "llama-server")
     rocm = os.path.join(ROOT_DIR, "build-rocm", "bin", "llama-server")
     if os.access(vulkan, os.X_OK):
-        configs.append(("llama.cpp vulkan (GPU)", vulkan, ["-ngl", "99"]))
+        configs.append(("llama.cpp vulkan (GPU)", vulkan, gpu))
     if os.access(rocm, os.X_OK):
-        configs.append(("llama.cpp rocm (GPU)", rocm, ["-ngl", "99"]))
+        configs.append(("llama.cpp rocm (GPU)", rocm, gpu))
     if configs:
         configs.append(("llama.cpp (CPU only)", configs[0][1], ["-ngl", "0", "--device", "none"]))
     return configs
