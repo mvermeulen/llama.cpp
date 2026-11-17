@@ -114,8 +114,9 @@ Runtime tips for this APU:
     With a large carve-out (e.g. 96-160 GiB on Strix Halo) this is not needed.
   - Offload all layers to the iGPU: -ngl 99
   - Always use flash attention: -fa on
-  - Faster long prompts: -ub 2048 -b 2048 (+7-19% on gfx1151, depending on model)
-  - On gfx1151 Vulkan generates 4-12% faster; prompt speed is model dependent, see scripts/build-ryzen-ai-vulkan.sh
+  - Faster long prompts: -ub 2048 -b 2048 (+7-23% at 4096 tokens on gfx1151, depending on model)
+  - On gfx1151 Vulkan generates 3-19% faster and prompts faster on all tested models but MiniMax-M2.1, see scripts/build-ryzen-ai-vulkan.sh
+  - Models with an MTP head (e.g. Qwen3.5-122B): --spec-type draft-mtp (+58% generation on gfx1151)
   - For CPU work use the physical core count: -t $(lscpu -p=CORE | grep -v '^#' | sort -u | wc -l)
   - Compare settings with: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1 -ub 512,2048 -p 512,4096
 EOF
