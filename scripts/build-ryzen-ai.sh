@@ -91,8 +91,10 @@ fi
 
 # GGML_NATIVE: -march=native, picks up Zen 5 AVX-512 (VNNI, BF16, VBMI) for the CPU backend
 # GGML_HIP_NO_VMM=ON is the default and is what the APU needs
+# CMAKE_BUILD_RPATH: libggml-hip.so does not get the ROCm lib dir in its RUNPATH, so it fails to load when ROCm is not in the ld.so paths
 cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" "${GENERATOR[@]}" "${LAUNCHER[@]}" \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_BUILD_RPATH="${ROCM_PATH}/lib" \
     -DGGML_NATIVE=ON \
     -DGGML_LTO="${LTO}" \
     -DGGML_OPENMP=ON \
