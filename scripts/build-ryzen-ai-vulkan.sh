@@ -95,7 +95,7 @@ Build done: ${BUILD_DIR}/bin
 Runtime tips for this APU:
   - Check the iGPU is picked (not llvmpipe): ${BUILD_DIR}/bin/llama-cli --list-devices
   - Offload all layers to the iGPU: -ngl 99
-  - Faster prompt processing (~7% on gpt-oss-20b): -ub 1024
+  - Faster prompt processing on gpt-oss-20b Q8_0 (~7%), no gain on 7B Q4_K: -ub 1024
   - For CPU work use the physical core count: -t $(lscpu -p=CORE | grep -v '^#' | sort -u | wc -l)
   - Compare with the ROCm build: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1
 EOF
