@@ -70,6 +70,12 @@ if [ -z "${GPU_ARCH}" ]; then
     exit 1
 fi
 
+# the UI assets are downloaded for release b<commit count>, which does not exist on a branch with local commits,
+# so use the nearest upstream tag instead
+if [ -z "${HF_UI_VERSION:-}" ] && TAG="$(git -C "${ROOT_DIR}" describe --tags --abbrev=0 --match 'b[0-9]*' 2>/dev/null)"; then
+    export HF_UI_VERSION="${TAG}"
+fi
+
 GENERATOR=()
 if command -v ninja &>/dev/null; then
     GENERATOR=(-G Ninja)
