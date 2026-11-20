@@ -100,8 +100,12 @@ Build done: ${BUILD_DIR}/bin
 
 Runtime tips for this APU:
   - Check the iGPU is picked (not llvmpipe): ${BUILD_DIR}/bin/llama-cli --list-devices
-  - Offload all layers to the iGPU: -ngl 99
-  - Faster prompt processing on gpt-oss-20b Q8_0 (~7%), no gain on 7B Q4_K: -ub 1024
+  - Offload all layers to the iGPU and use flash attention: -ngl 99 -fa on
+  - MoE models (Qwen3.x-A3B, GLM-4.5-Air, gpt-oss): -ub 2048 -b 2048 (+21-34% prompt speed at 4096 tokens on gfx1150)
+  - Dense models: keep the default -ub 512, -ub 2048 changes their prompt speed by -6 to +3% on gfx1150
+  - Models with an MTP head (e.g. Qwen3.8-27B): --spec-type draft-mtp (generation 4.6 -> 10.5 tok/s on gfx1150)
+  - A q8_0 KV cache halves its memory for 0-2% prompt speed: -ctk q8_0 -ctv q8_0
+  - Generation is memory bound, about 80 GB/s on the HX 370: expect roughly 80 / (GB of weights read per token) tok/s
   - For CPU work use the physical core count: -t $(lscpu -p=CORE | grep -v '^#' | sort -u | wc -l)
-  - Compare with the ROCm build: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1
+  - Compare with the ROCm build: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1 -ub 512,1024,2048 -p 512,4096
 EOF

@@ -119,10 +119,12 @@ cat <<EOF
 Build done: ${BUILD_DIR}/bin
 
 Runtime tips for this APU:
-  - The iGPU shares system RAM. Let it allocate beyond the BIOS carve-out with:
-      export GGML_CUDA_ENABLE_UNIFIED_MEMORY=1
-  - Offload all layers to the iGPU: -ngl 99
-  - On the Radeon 860M the Vulkan build generates faster, more so at long context (7B Q4_K at 2.5k tokens: 19.4 vs 13.1 tok/s)
+  - The iGPU uses shared RAM (GTT), by default only half of it. Raise the limit with the ttm.pages_limit value
+    printed by scripts/check-ryzen-ai.sh, then GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 is not needed
+  - Offload all layers to the iGPU and use flash attention: -ngl 99 -fa on
+  - On gfx1150 (Radeon 890M) the Vulkan build is the better default: it generates up to 5% faster (gpt-oss-120b is a tie) and prompts faster on 3 of 5 models in server tests, see scripts/build-ryzen-ai-vulkan.sh
+  - ROCm is ahead on prompts for gpt-oss-120b with -ub 2048 -b 2048 (363 vs 339 tok/s at 2.5k tokens) and Llama 3.3 70B (+8%), at about the same generation speed
+  - ROCm prompt speed is not monotonic in -ub on MoE models (gpt-oss-120b at 4096 tokens: 290/239/425 tok/s for -ub 512/1024/2048), so measure before changing it
   - For CPU work use the physical core count: -t $(lscpu -p=CORE | grep -v '^#' | sort -u | wc -l)
-  - Compare backends/threads with: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 0,99 -t 4,8
+  - Compare settings with: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1 -ub 512,1024,2048 -p 512,4096
 EOF
