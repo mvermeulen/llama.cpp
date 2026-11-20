@@ -234,12 +234,32 @@ for b in build-rocm build-vulkan; do
     fi
 done
 
+# The server UI assets are downloaded for release b<commit count>. With local commits that release may not exist, and the
+# "latest" fallback can have a newer layout than this source expects, which fails the build. Ask the server what exists.
+ui_release_exists() {
+    curl -sfL -o /dev/null --max-time 15 "https://huggingface.co/buckets/ggml-org/llama-ui/resolve/$1/dist.tar.gz.sha256?download=true"
+}
 if git -C "${ROOT_DIR}" rev-parse --git-dir &>/dev/null; then
-    tag="$(git -C "${ROOT_DIR}" describe --tags --abbrev=0 --match 'b[0-9]*' 2>/dev/null)"
     count="$(git -C "${ROOT_DIR}" rev-list --count HEAD)"
-    if [ -n "${tag}" ] && [ "${tag}" != "b${count}" ]; then
-        info "HEAD is build b${count} but the nearest tag is ${tag}: plain cmake builds fail to download the UI assets," \
-             "use the build-ryzen-ai*.sh scripts or set HF_UI_VERSION=${tag}"
+    base=""
+    tag="$(git -C "${ROOT_DIR}" describe --tags --abbrev=0 --match 'b[0-9]*' 2>/dev/null)"
+    if [ -z "${tag}" ]; then
+        # no tags fetched: upstream tags each master commit b<commit count>, so use the merge base with master
+        for ref in upstream/master origin/master master; do
+            base="$(git -C "${ROOT_DIR}" merge-base HEAD "${ref}" 2>/dev/null)" && tag="b$(git -C "${ROOT_DIR}" rev-list --count "${base}")" && break
+        done
+    fi
+    if [ -z "${HF_UI_VERSION:-}" ] && [ -n "${tag}" ] && [ "${tag}" != "b${count}" ]; then
+        if ! have curl; then
+            info "HEAD is build b${count} on top of ${tag}: install curl to check that a UI release exists for it"
+        elif ui_release_exists "${tag}"; then
+            pass "UI release ${tag} exists, the build-ryzen-ai*.sh scripts use it (plain cmake: set HF_UI_VERSION=${tag})"
+        elif ui_release_exists "b${count}"; then
+            pass "UI release b${count} exists (an upstream build near ${tag}), the UI asset download will work"
+        else
+            warn "no UI release for b${count} or ${tag}: the build falls back to \"latest\", which may not match this source" \
+                 "find a release near ${tag} and build with HF_UI_VERSION=b<N>, check: curl -sfI https://huggingface.co/buckets/ggml-org/llama-ui/resolve/b<N>/dist.tar.gz.sha256"
+        fi
     fi
 fi
 
