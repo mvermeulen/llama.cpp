@@ -1,0 +1,24 @@
+model,engine,backend,config,prompt_tokens,prompt_tps,prompt_sd,gen_tps,gen_sd,peak_vram_gib,peak_gtt_gib,n_predict,runs
+Qwen3.5-9B,llama.cpp,Vulkan,-ngl 99 -fa on -ub 2048 -b 2048,2689,1118.2,10.2,36.09,0.07,5.9,0.9,256,3
+Qwen3.5-9B,llama.cpp,ROCm,-ngl 99 -fa on -ub 2048 -b 2048,2689,1065.5,3.4,35.06,0.35,0.0,6.3,256,3
+Qwen3.5-9B,Ollama,ROCm,service settings: FA + q8_0 KV,2689,1027.0,4.0,27.74,0.31,0.0,6.7,256,3
+gpt-oss-20b,llama.cpp,Vulkan,-ngl 99 -fa on -ub 2048 -b 2048,2526,1849.0,15.9,68.58,0.8,11.6,0.8,256,3
+gpt-oss-20b,llama.cpp,ROCm,-ngl 99 -fa on -ub 2048 -b 2048,2526,1663.5,7.5,55.55,0.43,0.0,11.8,256,3
+gpt-oss-20b,Ollama,ROCm,service settings: FA + q8_0 KV,2526,1542.3,13.7,37.02,0.11,0.0,12.4,256,3
+Mistral-Small-24B,llama.cpp,Vulkan,-ngl 99 -fa on -ub 2048 -b 2048,2698,387.3,1.8,14.73,0.02,16.7,1.0,256,3
+Mistral-Small-24B,llama.cpp,ROCm,-ngl 99 -fa on -ub 2048 -b 2048,2698,386.7,2.3,14.12,0.06,0.1,17.1,256,3
+Mistral-Small-24B,Ollama,ROCm,service settings: FA + q8_0 KV,2856,379.5,1.8,13.59,0.01,0.0,15.4,256,3
+Qwen3.8-27B,llama.cpp,Vulkan,-ngl 99 -fa on -ub 2048 -b 2048,2731,331.2,0.4,12.38,0.01,17.1,1.2,256,3
+Qwen3.8-27B,llama.cpp,ROCm,-ngl 99 -fa on -ub 2048 -b 2048,2731,326.1,0.3,11.68,0.03,0.0,17.5,256,3
+Qwen3.8-27B,Ollama,ROCm,service settings: FA + q8_0 KV,2689,315.0,0.8,20.29,0.38,0.0,18.8,256,3
+Qwen3.8-27B,llama.cpp,Vulkan,-ngl 99 -fa on -ub 2048 -b 2048 --spec-type draft-mtp,2731,318.4,2.2,26.68,0.65,,,256,3
+Qwen3.8-27B,llama.cpp,ROCm,-ngl 99 -fa on -ub 2048 -b 2048 --spec-type draft-mtp,2731,313.7,0.4,20.46,0.47,,,256,3
+Gemma-4-26B-A4B,llama.cpp,Vulkan,-ngl 99 -fa on -ub 2048 -b 2048,2885,1458.3,6.0,53.17,0.42,17.6,1.0,256,3
+Gemma-4-26B-A4B,llama.cpp,ROCm,-ngl 99 -fa on -ub 2048 -b 2048,2885,1429.0,4.3,40.35,1.52,0.0,18.2,256,3
+Gemma-4-26B-A4B,Ollama,ROCm,service settings: FA + q8_0 KV,2885,1381.0,5.0,44.86,1.77,0.0,17.9,256,3
+Qwen3-Coder-30B-A3B,llama.cpp,Vulkan,-ngl 99 -fa on -ub 2048 -b 2048,2625,1590.5,3.8,71.94,0.44,19.0,0.6,256,3
+Qwen3-Coder-30B-A3B,llama.cpp,ROCm,-ngl 99 -fa on -ub 2048 -b 2048,2625,1494.8,29.8,57.99,1.48,0.0,19.3,256,3
+Qwen3-Coder-30B-A3B,Ollama,ROCm,service settings: FA + q8_0 KV,2625,1335.3,7.6,49.85,1.5,0.0,18.4,256,3
+Qwen3.6-35B-A3B,llama.cpp,Vulkan,-ngl 99 -fa on -ub 2048 -b 2048,2689,1676.5,18.5,54.49,0.53,19.8,0.5,256,3
+Qwen3.6-35B-A3B,llama.cpp,ROCm,-ngl 99 -fa on -ub 2048 -b 2048,2689,1263.3,5.9,36.13,0.09,0.0,20.1,256,3
+Qwen3.6-35B-A3B,Ollama,ROCm,service settings: FA + q8_0 KV,2689,1207.9,3.2,44.87,0.3,0.0,22.6,256,3

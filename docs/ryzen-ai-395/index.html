@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ryzen AI Max+ 395 LLM Benchmarks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+:root{
+  /* layout: same report system as the mev_ryzen370 / mev_ryzen495 pages; one reading column, memory finding first */
+  --bg:#f6f7f9; --panel:#ffffff; --fg:#17202b; --muted:#5b6676; --line:#dde2e9;
+  --accent:#0b7a75; --vk:#0a8f86; --rc:#c94a14; --ol:#7d55c8; --good:#15803d; --bad:#b42318;
+  --vram:#0b7a75; --gtt:#c9a227; --cap:#b42318;
+  --code-bg:#eef1f5;
+  --f-display:"Space Grotesk",system-ui,sans-serif; --f-body:"IBM Plex Sans",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141a; --panel:#161d26; --fg:#e6ebf1; --muted:#9aa6b6; --line:#2a3441;
+  --accent:#3fb8b0; --vk:#1fa198; --rc:#e2702f; --ol:#9d7ae6; --good:#4ade80; --bad:#f87171;
+  --vram:#3fb8b0; --gtt:#e0bd4a; --cap:#f87171; --code-bg:#1d2632; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141a; --panel:#161d26; --fg:#e6ebf1; --muted:#9aa6b6; --line:#2a3441;
+  --accent:#3fb8b0; --vk:#1fa198; --rc:#e2702f; --ol:#9d7ae6; --good:#4ade80; --bad:#f87171;
+  --vram:#3fb8b0; --gtt:#e0bd4a; --cap:#f87171; --code-bg:#1d2632; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body)}
+.wrap{max-width:1040px;margin:0 auto;padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:36px}
+header{display:grid;gap:10px}
+.eyebrow{font:500 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:600 clamp(26px,4vw,38px)/1.15 var(--f-display);margin:0;text-wrap:balance}
+h2{font:600 22px/1.25 var(--f-display);margin:0 0 12px;text-wrap:balance}
+p{margin:0;max-width:72ch}
+.muted,.dim{color:var(--muted)}
+.specs{display:flex;flex-wrap:wrap;gap:6px 18px;font:13px var(--f-mono);color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:grid;gap:2px;align-content:start}
+.tile .v{font:600 28px var(--f-display);font-variant-numeric:tabular-nums}
+.tile .k{font-size:13px;color:var(--muted)}
+section{display:grid;gap:12px;min-width:0}
+ul.find{margin:0;padding-left:20px;display:grid;gap:6px;max-width:80ch}
+.rec{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:16px 18px;display:grid;gap:10px;min-width:0}
+pre{margin:0;background:var(--code-bg);border-radius:6px;padding:10px 12px;overflow-x:auto;font:13px/1.5 var(--f-mono)}
+code{font:13px var(--f-mono)}
+.scroll{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+thead th{font:600 12px var(--f-body);color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--line)}
+tbody th{font-weight:500}
+.n{text-align:right}
+.good{color:var(--good);font-weight:600}.bad{color:var(--bad);font-weight:600}
+.chart{width:100%;min-width:560px;height:auto;display:block}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .cap{stroke:var(--cap);stroke-width:1.5;stroke-dasharray:4 3}
+.chart .caplbl{fill:var(--cap);font:500 11px var(--f-mono)}
+.chart .tick{fill:var(--muted);font:11px var(--f-mono)}
+.chart .lbl{fill:var(--fg);font:13px var(--f-body)}
+.chart .eng{fill:var(--muted);font:11px var(--f-mono)}
+.chart .val{fill:var(--muted);font:11px var(--f-mono)}
+.s-vk{fill:var(--vk)}.s-rc{fill:var(--rc)}.s-ol{fill:var(--ol)}.m-vram{fill:var(--vram)}.m-gtt{fill:var(--gtt)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+a{color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
+.chart path{cursor:default}.chart path:hover{opacity:.8}
+#tip{position:fixed;pointer-events:none;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font:13px var(--f-body);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+</style>
+
+</head>
+<body>
+
+<div class=wrap>
+<header>
+  <div class=eyebrow>llama.cpp branch mev_ryzen395 &middot; 2026-11-20</div>
+  <h1>Ryzen AI Max+ PRO 395 LLM benchmarks</h1>
+  <p class=muted>Seven models from 9B to 35B parameters, each small enough for the 32 GiB BIOS VRAM carve-out, run fully on the integrated GPU with llama.cpp (Vulkan and ROCm) and compared against Ollama. Peak GPU memory was sampled during every run to see where each engine puts the model.</p>
+  <div class=specs><span>CPU: 16C/32T Zen 5, AVX-512</span><span>GPU: Radeon 8060S, gfx1151, 40 CUs</span><span>Memory: 128 GB LPDDR5X, 256-bit; 32 GiB carve-out + 92 GiB system RAM</span><span>ROCm 10.2 (HIP 7.17) &middot; Mesa 26.0.8 RADV &middot; Ollama 0.40.16</span></div>
+</header>
+
+<div class=tiles>
+  <div class=tile><span class=v>1 of 3</span><span class=k>engines put the model in the carve-out (llama.cpp Vulkan)</span></div>
+  <div class=tile><span class=v>71.9</span><span class=k>tok/s generation, Qwen3-Coder-30B-A3B on Vulkan (fastest)</span></div>
+  <div class=tile><span class=v>+32%</span><span class=k>Vulkan generation vs Ollama, geometric mean of 7 models</span></div>
+  <div class=tile><span class=v>+23%</span><span class=k>Vulkan generation vs llama.cpp ROCm, geometric mean</span></div>
+</div>
+
+<section>
+  <h2>Recommended settings</h2>
+  <div class=rec>
+    <p>To keep models inside the 32 GiB carve-out, serve them with the Vulkan build. It also generates fastest here on every model.</p>
+    <pre>./scripts/check-ryzen-ai.sh             # read-only setup check
+./scripts/build-ryzen-ai-vulkan.sh      # -> build-vulkan
+
+build-vulkan/bin/llama-server -m model.gguf -ngl 99 -fa on -ub 2048 -b 2048 --jinja
+#   + --spec-type draft-mtp          for models with an MTP head (Qwen3.8-27B): 12.4 -> 26.7 tok/s</pre>
+    <p class=muted>The Vulkan peak was 19.8 GiB in the carve-out (Qwen3.6-35B-A3B at 16k context), so every model here leaves room for a longer context. ROCm and Ollama do not use the carve-out at all, see below.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Findings</h2>
+  <ul class=find>
+    <li><b>Only Vulkan uses the carve-out.</b> llama.cpp Vulkan placed every model in VRAM, with under 1.2 GiB in shared RAM. llama.cpp ROCm and Ollama (also ROCm) placed every model in shared system RAM (GTT) and left VRAM at its idle 0.5 GiB. With those engines the carve-out stays reserved and unused, and the model takes memory from the 92 GiB the OS has.</li>
+    <li><b>Nothing caps ROCm or Ollama at 32 GiB.</b> <code>/etc/modprobe.d/ttm.conf</code> sets <code>ttm pages_limit=26214400</code>, so ROCm and Ollama report 100 GiB of GPU memory and Vulkan reports 124 GiB. A model larger than the carve-out would load and spill instead of failing.</li>
+    <li><b>Vulkan generates fastest on every model.</b> It generates 8-85% faster than Ollama and 3-51% faster than llama.cpp ROCm. The gap is largest on the MoE models (gpt-oss-20b +85% vs Ollama) and smallest on the dense Mistral-Small-24B.</li>
+    <li><b>Prompt processing follows the same order but closer.</b> Vulkan leads Ollama by 2-39% and ROCm by up to 33% (the two tie on Mistral-Small-24B); Qwen3.6-35B-A3B has the widest gap.</li>
+    <li><b>MTP drafting makes Qwen3.8-27B fast.</b> Ollama's file has the MTP head and Ollama uses it. llama.cpp with <code>--spec-type draft-mtp</code> on the same file reaches 26.7 tok/s on Vulkan, against 20.3 for Ollama and 12.4 without drafting; 61-71% of drafted tokens were accepted. The ggml-org Q4_K_M has no MTP layers.</li>
+    <li><b>Ollama's files load in llama.cpp for 3 of the 7 models.</b> qwen3.5, gpt-oss, gemma4 and qwen3.6 use Ollama-only metadata (for example <code>gptoss</code> as the architecture name); llama.cpp ran a public GGUF with the same quantization for those.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Where the model lives</h2>
+  <p class=muted>Peak memory above idle during each run, sampled every 0.5 s from <code>mem_info_vram_used</code> and <code>mem_info_gtt_used</code>. Teal is the BIOS carve-out (VRAM), gold is shared system RAM (GTT). Hover a bar for its value.</p>
+  <div class=legend><span><i style="background:var(--vram)"></i>carve-out (VRAM)</span><span><i style="background:var(--gtt)"></i>shared RAM (GTT)</span></div>
+  <div class=scroll><svg viewBox="0 0 760 464" role="img" aria-label="Peak GPU memory by location, GiB" class="chart">
+<line x1="190.0" x2="190.0" y1="18" y2="464" class="grid"/>
+<text x="190.0" y="12" class="tick" text-anchor="middle">0</text>
+<line x1="262.9" x2="262.9" y1="18" y2="464" class="grid"/>
+<text x="262.9" y="12" class="tick" text-anchor="middle">5</text>
+<line x1="335.7" x2="335.7" y1="18" y2="464" class="grid"/>
+<text x="335.7" y="12" class="tick" text-anchor="middle">10</text>
+<line x1="408.6" x2="408.6" y1="18" y2="464" class="grid"/>
+<text x="408.6" y="12" class="tick" text-anchor="middle">15</text>
+<line x1="481.4" x2="481.4" y1="18" y2="464" class="grid"/>
+<text x="481.4" y="12" class="tick" text-anchor="middle">20</text>
+<line x1="554.3" x2="554.3" y1="18" y2="464" class="grid"/>
+<text x="554.3" y="12" class="tick" text-anchor="middle">25</text>
+<line x1="627.1" x2="627.1" y1="18" y2="464" class="grid"/>
+<text x="627.1" y="12" class="tick" text-anchor="middle">30</text>
+<line x1="700.0" x2="700.0" y1="18" y2="464" class="grid"/>
+<text x="700.0" y="12" class="tick" text-anchor="middle">35</text>
+<line x1="656.3" x2="656.3" y1="18" y2="464" class="cap"/>
+<text x="651.3" y="30" class="caplbl" text-anchor="end">32 GiB carve-out</text>
+<text x="128" y="63.5" class="lbl" text-anchor="end">Qwen3.5-9B</text>
+<text x="182" y="48.0" class="eng" text-anchor="end">Vulkan</text>
+<path d="M190.0 38.0h82.0a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-82.0z" class="m-vram" data-tip="Qwen3.5-9B - llama.cpp Vulkan: 5.9 GiB in the carve-out (VRAM)"><title>Qwen3.5-9B - llama.cpp Vulkan: 5.9 GiB in the carve-out (VRAM)</title></path>
+<path d="M276.0 38.0h9.1a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-9.1z" class="m-gtt" data-tip="Qwen3.5-9B - llama.cpp Vulkan: 0.9 GiB in shared RAM (GTT)"><title>Qwen3.5-9B - llama.cpp Vulkan: 0.9 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="63.0" class="eng" text-anchor="end">ROCm</text>
+
+<path d="M190.0 53.0h87.8a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-87.8z" class="m-gtt" data-tip="Qwen3.5-9B - llama.cpp ROCm: 6.3 GiB in shared RAM (GTT)"><title>Qwen3.5-9B - llama.cpp ROCm: 6.3 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="78.0" class="eng" text-anchor="end">Ollama (ROCm)</text>
+
+<path d="M190.0 68.0h93.6a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-93.6z" class="m-gtt" data-tip="Qwen3.5-9B - Ollama (ROCm): 6.7 GiB in shared RAM (GTT)"><title>Qwen3.5-9B - Ollama (ROCm): 6.7 GiB in shared RAM (GTT)</title></path>
+<text x="128" y="125.5" class="lbl" text-anchor="end">gpt-oss-20b</text>
+<text x="182" y="110.0" class="eng" text-anchor="end">Vulkan</text>
+<path d="M190.0 100.0h165.0a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-165.0z" class="m-vram" data-tip="gpt-oss-20b - llama.cpp Vulkan: 11.6 GiB in the carve-out (VRAM)"><title>gpt-oss-20b - llama.cpp Vulkan: 11.6 GiB in the carve-out (VRAM)</title></path>
+<path d="M359.0 100.0h7.7a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-7.7z" class="m-gtt" data-tip="gpt-oss-20b - llama.cpp Vulkan: 0.8 GiB in shared RAM (GTT)"><title>gpt-oss-20b - llama.cpp Vulkan: 0.8 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="125.0" class="eng" text-anchor="end">ROCm</text>
+
+<path d="M190.0 115.0h167.9a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-167.9z" class="m-gtt" data-tip="gpt-oss-20b - llama.cpp ROCm: 11.8 GiB in shared RAM (GTT)"><title>gpt-oss-20b - llama.cpp ROCm: 11.8 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="140.0" class="eng" text-anchor="end">Ollama (ROCm)</text>
+
+<path d="M190.0 130.0h176.7a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-176.7z" class="m-gtt" data-tip="gpt-oss-20b - Ollama (ROCm): 12.4 GiB in shared RAM (GTT)"><title>gpt-oss-20b - Ollama (ROCm): 12.4 GiB in shared RAM (GTT)</title></path>
+<text x="128" y="187.5" class="lbl" text-anchor="end">Mistral-Small-24B</text>
+<text x="182" y="172.0" class="eng" text-anchor="end">Vulkan</text>
+<path d="M190.0 162.0h239.3a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-239.3z" class="m-vram" data-tip="Mistral-Small-24B - llama.cpp Vulkan: 16.7 GiB in the carve-out (VRAM)"><title>Mistral-Small-24B - llama.cpp Vulkan: 16.7 GiB in the carve-out (VRAM)</title></path>
+<path d="M433.3 162.0h10.6a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-10.6z" class="m-gtt" data-tip="Mistral-Small-24B - llama.cpp Vulkan: 1.0 GiB in shared RAM (GTT)"><title>Mistral-Small-24B - llama.cpp Vulkan: 1.0 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="187.0" class="eng" text-anchor="end">ROCm</text>
+<path d="M190.0 177.0h0.7a0.7 0.7 0 0 1 0.7 0.7v10.5a0.7 0.7 0 0 1 -0.7 0.7h-0.7z" class="m-vram" data-tip="Mistral-Small-24B - llama.cpp ROCm: 0.1 GiB in the carve-out (VRAM)"><title>Mistral-Small-24B - llama.cpp ROCm: 0.1 GiB in the carve-out (VRAM)</title></path>
+<path d="M191.5 177.0h245.2a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-245.2z" class="m-gtt" data-tip="Mistral-Small-24B - llama.cpp ROCm: 17.1 GiB in shared RAM (GTT)"><title>Mistral-Small-24B - llama.cpp ROCm: 17.1 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="202.0" class="eng" text-anchor="end">Ollama (ROCm)</text>
+
+<path d="M190.0 192.0h220.4a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-220.4z" class="m-gtt" data-tip="Mistral-Small-24B - Ollama (ROCm): 15.4 GiB in shared RAM (GTT)"><title>Mistral-Small-24B - Ollama (ROCm): 15.4 GiB in shared RAM (GTT)</title></path>
+<text x="128" y="249.5" class="lbl" text-anchor="end">Qwen3.8-27B</text>
+<text x="182" y="234.0" class="eng" text-anchor="end">Vulkan</text>
+<path d="M190.0 224.0h245.2a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-245.2z" class="m-vram" data-tip="Qwen3.8-27B - llama.cpp Vulkan: 17.1 GiB in the carve-out (VRAM)"><title>Qwen3.8-27B - llama.cpp Vulkan: 17.1 GiB in the carve-out (VRAM)</title></path>
+<path d="M439.2 224.0h13.5a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-13.5z" class="m-gtt" data-tip="Qwen3.8-27B - llama.cpp Vulkan: 1.2 GiB in shared RAM (GTT)"><title>Qwen3.8-27B - llama.cpp Vulkan: 1.2 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="249.0" class="eng" text-anchor="end">ROCm</text>
+
+<path d="M190.0 239.0h251.0a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-251.0z" class="m-gtt" data-tip="Qwen3.8-27B - llama.cpp ROCm: 17.5 GiB in shared RAM (GTT)"><title>Qwen3.8-27B - llama.cpp ROCm: 17.5 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="264.0" class="eng" text-anchor="end">Ollama (ROCm)</text>
+
+<path d="M190.0 254.0h269.9a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-269.9z" class="m-gtt" data-tip="Qwen3.8-27B - Ollama (ROCm): 18.8 GiB in shared RAM (GTT)"><title>Qwen3.8-27B - Ollama (ROCm): 18.8 GiB in shared RAM (GTT)</title></path>
+<text x="128" y="311.5" class="lbl" text-anchor="end">Gemma-4-26B-A4B</text>
+<text x="182" y="296.0" class="eng" text-anchor="end">Vulkan</text>
+<path d="M190.0 286.0h252.5a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-252.5z" class="m-vram" data-tip="Gemma-4-26B-A4B - llama.cpp Vulkan: 17.6 GiB in the carve-out (VRAM)"><title>Gemma-4-26B-A4B - llama.cpp Vulkan: 17.6 GiB in the carve-out (VRAM)</title></path>
+<path d="M446.5 286.0h10.6a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-10.6z" class="m-gtt" data-tip="Gemma-4-26B-A4B - llama.cpp Vulkan: 1.0 GiB in shared RAM (GTT)"><title>Gemma-4-26B-A4B - llama.cpp Vulkan: 1.0 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="311.0" class="eng" text-anchor="end">ROCm</text>
+
+<path d="M190.0 301.0h261.2a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-261.2z" class="m-gtt" data-tip="Gemma-4-26B-A4B - llama.cpp ROCm: 18.2 GiB in shared RAM (GTT)"><title>Gemma-4-26B-A4B - llama.cpp ROCm: 18.2 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="326.0" class="eng" text-anchor="end">Ollama (ROCm)</text>
+
+<path d="M190.0 316.0h256.8a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-256.8z" class="m-gtt" data-tip="Gemma-4-26B-A4B - Ollama (ROCm): 17.9 GiB in shared RAM (GTT)"><title>Gemma-4-26B-A4B - Ollama (ROCm): 17.9 GiB in shared RAM (GTT)</title></path>
+<text x="128" y="373.5" class="lbl" text-anchor="end">Qwen3-Coder-30B-A3B</text>
+<text x="182" y="358.0" class="eng" text-anchor="end">Vulkan</text>
+<path d="M190.0 348.0h272.9a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-272.9z" class="m-vram" data-tip="Qwen3-Coder-30B-A3B - llama.cpp Vulkan: 19.0 GiB in the carve-out (VRAM)"><title>Qwen3-Coder-30B-A3B - llama.cpp Vulkan: 19.0 GiB in the carve-out (VRAM)</title></path>
+<path d="M466.9 348.0h4.7a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-4.7z" class="m-gtt" data-tip="Qwen3-Coder-30B-A3B - llama.cpp Vulkan: 0.6 GiB in shared RAM (GTT)"><title>Qwen3-Coder-30B-A3B - llama.cpp Vulkan: 0.6 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="373.0" class="eng" text-anchor="end">ROCm</text>
+
+<path d="M190.0 363.0h277.2a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-277.2z" class="m-gtt" data-tip="Qwen3-Coder-30B-A3B - llama.cpp ROCm: 19.3 GiB in shared RAM (GTT)"><title>Qwen3-Coder-30B-A3B - llama.cpp ROCm: 19.3 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="388.0" class="eng" text-anchor="end">Ollama (ROCm)</text>
+
+<path d="M190.0 378.0h264.1a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-264.1z" class="m-gtt" data-tip="Qwen3-Coder-30B-A3B - Ollama (ROCm): 18.4 GiB in shared RAM (GTT)"><title>Qwen3-Coder-30B-A3B - Ollama (ROCm): 18.4 GiB in shared RAM (GTT)</title></path>
+<text x="128" y="435.5" class="lbl" text-anchor="end">Qwen3.6-35B-A3B</text>
+<text x="182" y="420.0" class="eng" text-anchor="end">Vulkan</text>
+<path d="M190.0 410.0h284.5a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-284.5z" class="m-vram" data-tip="Qwen3.6-35B-A3B - llama.cpp Vulkan: 19.8 GiB in the carve-out (VRAM)"><title>Qwen3.6-35B-A3B - llama.cpp Vulkan: 19.8 GiB in the carve-out (VRAM)</title></path>
+<path d="M478.5 410.0h3.6a3.6 3.6 0 0 1 3.6 3.6v4.7a3.6 3.6 0 0 1 -3.6 3.6h-3.6z" class="m-gtt" data-tip="Qwen3.6-35B-A3B - llama.cpp Vulkan: 0.5 GiB in shared RAM (GTT)"><title>Qwen3.6-35B-A3B - llama.cpp Vulkan: 0.5 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="435.0" class="eng" text-anchor="end">ROCm</text>
+
+<path d="M190.0 425.0h288.9a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-288.9z" class="m-gtt" data-tip="Qwen3.6-35B-A3B - llama.cpp ROCm: 20.1 GiB in shared RAM (GTT)"><title>Qwen3.6-35B-A3B - llama.cpp ROCm: 20.1 GiB in shared RAM (GTT)</title></path>
+<text x="182" y="450.0" class="eng" text-anchor="end">Ollama (ROCm)</text>
+
+<path d="M190.0 440.0h325.3a4.0 4.0 0 0 1 4.0 4.0v4.0a4.0 4.0 0 0 1 -4.0 4.0h-325.3z" class="m-gtt" data-tip="Qwen3.6-35B-A3B - Ollama (ROCm): 22.6 GiB in shared RAM (GTT)"><title>Qwen3.6-35B-A3B - Ollama (ROCm): 22.6 GiB in shared RAM (GTT)</title></path>
+</svg></div>
+</section>
+
+<section>
+  <h2>Generation speed</h2>
+  <p class=muted>llama-server and Ollama, 256 tokens generated after a 2.5-2.9k token prompt, mean of 3 runs after a warm-up, context 16384. llama.cpp runs use <code>-ngl 99 -fa on -ub 2048 -b 2048</code>, plus <code>--spec-type draft-mtp</code> for Qwen3.8-27B. The fastest engine in each group is labeled.</p>
+  <div class=legend><span><i style="background:var(--vk)"></i>llama.cpp Vulkan</span><span><i style="background:var(--rc)"></i>llama.cpp ROCm</span><span><i style="background:var(--ol)"></i>Ollama (ROCm runner)</span></div>
+  <div class=scroll><svg viewBox="0 0 760 421" role="img" aria-label="Generation speed in tokens per second" class="chart">
+<line x1="190.0" x2="190.0" y1="18" y2="421" class="grid"/>
+<text x="190.0" y="12" class="tick" text-anchor="middle">0</text>
+<line x1="253.8" x2="253.8" y1="18" y2="421" class="grid"/>
+<text x="253.8" y="12" class="tick" text-anchor="middle">10</text>
+<line x1="317.5" x2="317.5" y1="18" y2="421" class="grid"/>
+<text x="317.5" y="12" class="tick" text-anchor="middle">20</text>
+<line x1="381.2" x2="381.2" y1="18" y2="421" class="grid"/>
+<text x="381.2" y="12" class="tick" text-anchor="middle">30</text>
+<line x1="445.0" x2="445.0" y1="18" y2="421" class="grid"/>
+<text x="445.0" y="12" class="tick" text-anchor="middle">40</text>
+<line x1="508.8" x2="508.8" y1="18" y2="421" class="grid"/>
+<text x="508.8" y="12" class="tick" text-anchor="middle">50</text>
+<line x1="572.5" x2="572.5" y1="18" y2="421" class="grid"/>
+<text x="572.5" y="12" class="tick" text-anchor="middle">60</text>
+<line x1="636.2" x2="636.2" y1="18" y2="421" class="grid"/>
+<text x="636.2" y="12" class="tick" text-anchor="middle">70</text>
+<line x1="700.0" x2="700.0" y1="18" y2="421" class="grid"/>
+<text x="700.0" y="12" class="tick" text-anchor="middle">80</text>
+<text x="180" y="48.5" class="lbl" text-anchor="end">Qwen3-Coder-30B-A3B</text>
+<path d="M190.0 22.0h454.6a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-454.6z" class="s-vk" data-tip="Qwen3-Coder-30B-A3B - llama.cpp Vulkan: 71.9 tok/s"><title>Qwen3-Coder-30B-A3B - llama.cpp Vulkan: 71.9 tok/s</title></path>
+<text x="654.6" y="32.5" class="val">71.9</text>
+<path d="M190.0 37.0h365.7a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-365.7z" class="s-rc" data-tip="Qwen3-Coder-30B-A3B - llama.cpp ROCm: 58.0 tok/s"><title>Qwen3-Coder-30B-A3B - llama.cpp ROCm: 58.0 tok/s</title></path>
+<path d="M190.0 52.0h313.8a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-313.8z" class="s-ol" data-tip="Qwen3-Coder-30B-A3B - Ollama (ROCm): 49.8 tok/s"><title>Qwen3-Coder-30B-A3B - Ollama (ROCm): 49.8 tok/s</title></path>
+<text x="180" y="105.5" class="lbl" text-anchor="end">gpt-oss-20b</text>
+<path d="M190.0 79.0h433.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-433.2z" class="s-vk" data-tip="gpt-oss-20b - llama.cpp Vulkan: 68.6 tok/s"><title>gpt-oss-20b - llama.cpp Vulkan: 68.6 tok/s</title></path>
+<text x="633.2" y="89.5" class="val">68.6</text>
+<path d="M190.0 94.0h350.1a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-350.1z" class="s-rc" data-tip="gpt-oss-20b - llama.cpp ROCm: 55.5 tok/s"><title>gpt-oss-20b - llama.cpp ROCm: 55.5 tok/s</title></path>
+<path d="M190.0 109.0h232.0a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-232.0z" class="s-ol" data-tip="gpt-oss-20b - Ollama (ROCm): 37.0 tok/s"><title>gpt-oss-20b - Ollama (ROCm): 37.0 tok/s</title></path>
+<text x="180" y="162.5" class="lbl" text-anchor="end">Qwen3.6-35B-A3B</text>
+<path d="M190.0 136.0h343.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-343.4z" class="s-vk" data-tip="Qwen3.6-35B-A3B - llama.cpp Vulkan: 54.5 tok/s"><title>Qwen3.6-35B-A3B - llama.cpp Vulkan: 54.5 tok/s</title></path>
+<text x="543.4" y="146.5" class="val">54.5</text>
+<path d="M190.0 151.0h226.3a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-226.3z" class="s-rc" data-tip="Qwen3.6-35B-A3B - llama.cpp ROCm: 36.1 tok/s"><title>Qwen3.6-35B-A3B - llama.cpp ROCm: 36.1 tok/s</title></path>
+<path d="M190.0 166.0h282.0a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-282.0z" class="s-ol" data-tip="Qwen3.6-35B-A3B - Ollama (ROCm): 44.9 tok/s"><title>Qwen3.6-35B-A3B - Ollama (ROCm): 44.9 tok/s</title></path>
+<text x="180" y="219.5" class="lbl" text-anchor="end">Gemma-4-26B-A4B</text>
+<path d="M190.0 193.0h335.0a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-335.0z" class="s-vk" data-tip="Gemma-4-26B-A4B - llama.cpp Vulkan: 53.2 tok/s"><title>Gemma-4-26B-A4B - llama.cpp Vulkan: 53.2 tok/s</title></path>
+<text x="535.0" y="203.5" class="val">53.2</text>
+<path d="M190.0 208.0h253.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-253.2z" class="s-rc" data-tip="Gemma-4-26B-A4B - llama.cpp ROCm: 40.3 tok/s"><title>Gemma-4-26B-A4B - llama.cpp ROCm: 40.3 tok/s</title></path>
+<path d="M190.0 223.0h282.0a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-282.0z" class="s-ol" data-tip="Gemma-4-26B-A4B - Ollama (ROCm): 44.9 tok/s"><title>Gemma-4-26B-A4B - Ollama (ROCm): 44.9 tok/s</title></path>
+<text x="180" y="276.5" class="lbl" text-anchor="end">Qwen3.5-9B</text>
+<path d="M190.0 250.0h226.1a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-226.1z" class="s-vk" data-tip="Qwen3.5-9B - llama.cpp Vulkan: 36.1 tok/s"><title>Qwen3.5-9B - llama.cpp Vulkan: 36.1 tok/s</title></path>
+<text x="426.1" y="260.5" class="val">36.1</text>
+<path d="M190.0 265.0h219.5a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-219.5z" class="s-rc" data-tip="Qwen3.5-9B - llama.cpp ROCm: 35.1 tok/s"><title>Qwen3.5-9B - llama.cpp ROCm: 35.1 tok/s</title></path>
+<path d="M190.0 280.0h172.8a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-172.8z" class="s-ol" data-tip="Qwen3.5-9B - Ollama (ROCm): 27.7 tok/s"><title>Qwen3.5-9B - Ollama (ROCm): 27.7 tok/s</title></path>
+<text x="180" y="333.5" class="lbl" text-anchor="end">Qwen3.8-27B</text>
+<path d="M190.0 307.0h166.1a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-166.1z" class="s-vk" data-tip="Qwen3.8-27B - llama.cpp Vulkan MTP draft: 26.7 tok/s"><title>Qwen3.8-27B - llama.cpp Vulkan MTP draft: 26.7 tok/s</title></path>
+<text x="366.1" y="317.5" class="val">26.7</text>
+<path d="M190.0 322.0h126.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-126.4z" class="s-rc" data-tip="Qwen3.8-27B - llama.cpp ROCm MTP draft: 20.5 tok/s"><title>Qwen3.8-27B - llama.cpp ROCm MTP draft: 20.5 tok/s</title></path>
+<path d="M190.0 337.0h125.3a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-125.3z" class="s-ol" data-tip="Qwen3.8-27B - Ollama (ROCm) built-in MTP: 20.3 tok/s"><title>Qwen3.8-27B - Ollama (ROCm) built-in MTP: 20.3 tok/s</title></path>
+<text x="180" y="390.5" class="lbl" text-anchor="end">Mistral-Small-24B</text>
+<path d="M190.0 364.0h89.9a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-89.9z" class="s-vk" data-tip="Mistral-Small-24B - llama.cpp Vulkan: 14.7 tok/s"><title>Mistral-Small-24B - llama.cpp Vulkan: 14.7 tok/s</title></path>
+<text x="289.9" y="374.5" class="val">14.7</text>
+<path d="M190.0 379.0h86.0a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-86.0z" class="s-rc" data-tip="Mistral-Small-24B - llama.cpp ROCm: 14.1 tok/s"><title>Mistral-Small-24B - llama.cpp ROCm: 14.1 tok/s</title></path>
+<path d="M190.0 394.0h82.6a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-82.6z" class="s-ol" data-tip="Mistral-Small-24B - Ollama (ROCm): 13.6 tok/s"><title>Mistral-Small-24B - Ollama (ROCm): 13.6 tok/s</title></path>
+</svg></div>
+</section>
+
+<section>
+  <h2>Prompt processing speed</h2>
+  <p class=muted>Same runs, prompt tokens per second.</p>
+  <div class=legend><span><i style="background:var(--vk)"></i>llama.cpp Vulkan</span><span><i style="background:var(--rc)"></i>llama.cpp ROCm</span><span><i style="background:var(--ol)"></i>Ollama (ROCm runner)</span></div>
+  <div class=scroll><svg viewBox="0 0 760 421" role="img" aria-label="Prompt speed in tokens per second" class="chart">
+<line x1="190.0" x2="190.0" y1="18" y2="421" class="grid"/>
+<text x="190.0" y="12" class="tick" text-anchor="middle">0</text>
+<line x1="253.8" x2="253.8" y1="18" y2="421" class="grid"/>
+<text x="253.8" y="12" class="tick" text-anchor="middle">250</text>
+<line x1="317.5" x2="317.5" y1="18" y2="421" class="grid"/>
+<text x="317.5" y="12" class="tick" text-anchor="middle">500</text>
+<line x1="381.2" x2="381.2" y1="18" y2="421" class="grid"/>
+<text x="381.2" y="12" class="tick" text-anchor="middle">750</text>
+<line x1="445.0" x2="445.0" y1="18" y2="421" class="grid"/>
+<text x="445.0" y="12" class="tick" text-anchor="middle">1000</text>
+<line x1="508.8" x2="508.8" y1="18" y2="421" class="grid"/>
+<text x="508.8" y="12" class="tick" text-anchor="middle">1250</text>
+<line x1="572.5" x2="572.5" y1="18" y2="421" class="grid"/>
+<text x="572.5" y="12" class="tick" text-anchor="middle">1500</text>
+<line x1="636.2" x2="636.2" y1="18" y2="421" class="grid"/>
+<text x="636.2" y="12" class="tick" text-anchor="middle">1750</text>
+<line x1="700.0" x2="700.0" y1="18" y2="421" class="grid"/>
+<text x="700.0" y="12" class="tick" text-anchor="middle">2000</text>
+<text x="180" y="48.5" class="lbl" text-anchor="end">gpt-oss-20b</text>
+<path d="M190.0 22.0h467.5a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-467.5z" class="s-vk" data-tip="gpt-oss-20b - llama.cpp Vulkan: 1849.0 tok/s"><title>gpt-oss-20b - llama.cpp Vulkan: 1849.0 tok/s</title></path>
+<text x="667.5" y="32.5" class="val">1849</text>
+<path d="M190.0 37.0h420.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-420.2z" class="s-rc" data-tip="gpt-oss-20b - llama.cpp ROCm: 1663.5 tok/s"><title>gpt-oss-20b - llama.cpp ROCm: 1663.5 tok/s</title></path>
+<path d="M190.0 52.0h389.3a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-389.3z" class="s-ol" data-tip="gpt-oss-20b - Ollama (ROCm): 1542.3 tok/s"><title>gpt-oss-20b - Ollama (ROCm): 1542.3 tok/s</title></path>
+<text x="180" y="105.5" class="lbl" text-anchor="end">Qwen3.6-35B-A3B</text>
+<path d="M190.0 79.0h423.5a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-423.5z" class="s-vk" data-tip="Qwen3.6-35B-A3B - llama.cpp Vulkan: 1676.5 tok/s"><title>Qwen3.6-35B-A3B - llama.cpp Vulkan: 1676.5 tok/s</title></path>
+<text x="623.5" y="89.5" class="val">1676</text>
+<path d="M190.0 94.0h318.1a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-318.1z" class="s-rc" data-tip="Qwen3.6-35B-A3B - llama.cpp ROCm: 1263.3 tok/s"><title>Qwen3.6-35B-A3B - llama.cpp ROCm: 1263.3 tok/s</title></path>
+<path d="M190.0 109.0h304.0a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-304.0z" class="s-ol" data-tip="Qwen3.6-35B-A3B - Ollama (ROCm): 1207.9 tok/s"><title>Qwen3.6-35B-A3B - Ollama (ROCm): 1207.9 tok/s</title></path>
+<text x="180" y="162.5" class="lbl" text-anchor="end">Qwen3-Coder-30B-A3B</text>
+<path d="M190.0 136.0h401.6a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-401.6z" class="s-vk" data-tip="Qwen3-Coder-30B-A3B - llama.cpp Vulkan: 1590.5 tok/s"><title>Qwen3-Coder-30B-A3B - llama.cpp Vulkan: 1590.5 tok/s</title></path>
+<text x="601.6" y="146.5" class="val">1590</text>
+<path d="M190.0 151.0h377.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-377.2z" class="s-rc" data-tip="Qwen3-Coder-30B-A3B - llama.cpp ROCm: 1494.8 tok/s"><title>Qwen3-Coder-30B-A3B - llama.cpp ROCm: 1494.8 tok/s</title></path>
+<path d="M190.0 166.0h336.5a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-336.5z" class="s-ol" data-tip="Qwen3-Coder-30B-A3B - Ollama (ROCm): 1335.3 tok/s"><title>Qwen3-Coder-30B-A3B - Ollama (ROCm): 1335.3 tok/s</title></path>
+<text x="180" y="219.5" class="lbl" text-anchor="end">Gemma-4-26B-A4B</text>
+<path d="M190.0 193.0h367.9a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-367.9z" class="s-vk" data-tip="Gemma-4-26B-A4B - llama.cpp Vulkan: 1458.3 tok/s"><title>Gemma-4-26B-A4B - llama.cpp Vulkan: 1458.3 tok/s</title></path>
+<text x="567.9" y="203.5" class="val">1458</text>
+<path d="M190.0 208.0h360.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-360.4z" class="s-rc" data-tip="Gemma-4-26B-A4B - llama.cpp ROCm: 1429.0 tok/s"><title>Gemma-4-26B-A4B - llama.cpp ROCm: 1429.0 tok/s</title></path>
+<path d="M190.0 223.0h348.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-348.2z" class="s-ol" data-tip="Gemma-4-26B-A4B - Ollama (ROCm): 1381.0 tok/s"><title>Gemma-4-26B-A4B - Ollama (ROCm): 1381.0 tok/s</title></path>
+<text x="180" y="276.5" class="lbl" text-anchor="end">Qwen3.5-9B</text>
+<path d="M190.0 250.0h281.1a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-281.1z" class="s-vk" data-tip="Qwen3.5-9B - llama.cpp Vulkan: 1118.2 tok/s"><title>Qwen3.5-9B - llama.cpp Vulkan: 1118.2 tok/s</title></path>
+<text x="481.1" y="260.5" class="val">1118</text>
+<path d="M190.0 265.0h267.7a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-267.7z" class="s-rc" data-tip="Qwen3.5-9B - llama.cpp ROCm: 1065.5 tok/s"><title>Qwen3.5-9B - llama.cpp ROCm: 1065.5 tok/s</title></path>
+<path d="M190.0 280.0h257.9a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-257.9z" class="s-ol" data-tip="Qwen3.5-9B - Ollama (ROCm): 1027.0 tok/s"><title>Qwen3.5-9B - Ollama (ROCm): 1027.0 tok/s</title></path>
+<text x="180" y="333.5" class="lbl" text-anchor="end">Mistral-Small-24B</text>
+<path d="M190.0 307.0h94.8a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-94.8z" class="s-vk" data-tip="Mistral-Small-24B - llama.cpp Vulkan: 387.3 tok/s"><title>Mistral-Small-24B - llama.cpp Vulkan: 387.3 tok/s</title></path>
+<text x="294.8" y="317.5" class="val">387</text>
+<path d="M190.0 322.0h94.6a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-94.6z" class="s-rc" data-tip="Mistral-Small-24B - llama.cpp ROCm: 386.7 tok/s"><title>Mistral-Small-24B - llama.cpp ROCm: 386.7 tok/s</title></path>
+<path d="M190.0 337.0h92.8a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-92.8z" class="s-ol" data-tip="Mistral-Small-24B - Ollama (ROCm): 379.5 tok/s"><title>Mistral-Small-24B - Ollama (ROCm): 379.5 tok/s</title></path>
+<text x="180" y="390.5" class="lbl" text-anchor="end">Qwen3.8-27B</text>
+<path d="M190.0 364.0h77.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-77.2z" class="s-vk" data-tip="Qwen3.8-27B - llama.cpp Vulkan MTP draft: 318.4 tok/s"><title>Qwen3.8-27B - llama.cpp Vulkan MTP draft: 318.4 tok/s</title></path>
+<text x="277.2" y="374.5" class="val">318</text>
+<path d="M190.0 379.0h76.0a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-76.0z" class="s-rc" data-tip="Qwen3.8-27B - llama.cpp ROCm MTP draft: 313.7 tok/s"><title>Qwen3.8-27B - llama.cpp ROCm MTP draft: 313.7 tok/s</title></path>
+<path d="M190.0 394.0h76.3a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-76.3z" class="s-ol" data-tip="Qwen3.8-27B - Ollama (ROCm) built-in MTP: 315.0 tok/s"><title>Qwen3.8-27B - Ollama (ROCm) built-in MTP: 315.0 tok/s</title></path>
+</svg></div>
+</section>
+
+<section>
+  <h2>All models</h2>
+  <p class=muted>tok/s, mean of 3 runs. Change is Vulkan against Ollama. Qwen3.8-27B llama.cpp numbers use the MTP draft.</p>
+  <div class=scroll><table><thead><tr><th>Model</th><th>Type</th><th class=n>Params B<br>total / active</th><th>Weights vs Ollama</th><th class=n>Ollama tg</th><th class=n>Vulkan tg</th><th class=n>ROCm tg</th><th class=n>Change</th><th class=n>Ollama pp</th><th class=n>Vulkan pp</th><th class=n>ROCm pp</th><th class=n>Change</th></tr></thead><tbody>
+<tr><th scope=row>Qwen3.5-9B</th><td>dense</td><td class=n>9.7</td><td>different file</td><td class=n>27.7</td><td class=n><b>36.1</b></td><td class=n>35.1</td><td class=n><span class=good>+30%</span></td><td class=n>1027</td><td class=n><b>1118</b></td><td class=n>1066</td><td class=n>+9%</td></tr>
+<tr><th scope=row>gpt-oss-20b</th><td>MoE</td><td class=n>21 / 3.6</td><td>different file</td><td class=n>37.0</td><td class=n><b>68.6</b></td><td class=n>55.5</td><td class=n><span class=good>+85%</span></td><td class=n>1542</td><td class=n><b>1849</b></td><td class=n>1664</td><td class=n>+20%</td></tr>
+<tr><th scope=row>Mistral-Small-24B</th><td>dense</td><td class=n>24</td><td>same file</td><td class=n>13.6</td><td class=n><b>14.7</b></td><td class=n>14.1</td><td class=n><span class=good>+8%</span></td><td class=n>379</td><td class=n><b>387</b></td><td class=n>387</td><td class=n>+2%</td></tr>
+<tr><th scope=row>Qwen3.8-27B</th><td>dense</td><td class=n>27</td><td>same file</td><td class=n>20.3</td><td class=n><b>26.7</b></td><td class=n>20.5</td><td class=n><span class=good>+32%</span></td><td class=n>315</td><td class=n><b>318</b></td><td class=n>314</td><td class=n>+1%</td></tr>
+<tr><th scope=row>Gemma-4-26B-A4B</th><td>MoE</td><td class=n>26 / 4</td><td>different file</td><td class=n>44.9</td><td class=n><b>53.2</b></td><td class=n>40.3</td><td class=n><span class=good>+19%</span></td><td class=n>1381</td><td class=n><b>1458</b></td><td class=n>1429</td><td class=n>+6%</td></tr>
+<tr><th scope=row>Qwen3-Coder-30B-A3B</th><td>MoE</td><td class=n>30 / 3</td><td>same file</td><td class=n>49.8</td><td class=n><b>71.9</b></td><td class=n>58.0</td><td class=n><span class=good>+44%</span></td><td class=n>1335</td><td class=n><b>1590</b></td><td class=n>1495</td><td class=n>+19%</td></tr>
+<tr><th scope=row>Qwen3.6-35B-A3B</th><td>MoE</td><td class=n>35 / 3</td><td>different file</td><td class=n>44.9</td><td class=n><b>54.5</b></td><td class=n>36.1</td><td class=n><span class=good>+21%</span></td><td class=n>1208</td><td class=n><b>1676</b></td><td class=n>1263</td><td class=n>+39%</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+  <h2>Peak memory by engine</h2>
+  <p class=muted>GiB above idle (0.5 GiB VRAM, 0.1 GiB GTT).</p>
+  <div class=scroll><table><thead><tr><th>Model</th><th class=n>Vulkan<br>VRAM</th><th class=n>Vulkan<br>GTT</th><th class=n>ROCm<br>VRAM</th><th class=n>ROCm<br>GTT</th><th class=n>Ollama<br>VRAM</th><th class=n>Ollama<br>GTT</th></tr></thead><tbody>
+<tr><th scope=row>Qwen3.5-9B</th><td class=n>5.9</td><td class=n>0.9</td><td class=n>0.0</td><td class=n>6.3</td><td class=n>0.0</td><td class=n>6.7</td></tr>
+<tr><th scope=row>gpt-oss-20b</th><td class=n>11.6</td><td class=n>0.8</td><td class=n>0.0</td><td class=n>11.8</td><td class=n>0.0</td><td class=n>12.4</td></tr>
+<tr><th scope=row>Mistral-Small-24B</th><td class=n>16.7</td><td class=n>1.0</td><td class=n>0.1</td><td class=n>17.1</td><td class=n>0.0</td><td class=n>15.4</td></tr>
+<tr><th scope=row>Qwen3.8-27B</th><td class=n>17.1</td><td class=n>1.2</td><td class=n>0.0</td><td class=n>17.5</td><td class=n>0.0</td><td class=n>18.8</td></tr>
+<tr><th scope=row>Gemma-4-26B-A4B</th><td class=n>17.6</td><td class=n>1.0</td><td class=n>0.0</td><td class=n>18.2</td><td class=n>0.0</td><td class=n>17.9</td></tr>
+<tr><th scope=row>Qwen3-Coder-30B-A3B</th><td class=n>19.0</td><td class=n>0.6</td><td class=n>0.0</td><td class=n>19.3</td><td class=n>0.0</td><td class=n>18.4</td></tr>
+<tr><th scope=row>Qwen3.6-35B-A3B</th><td class=n>19.8</td><td class=n>0.5</td><td class=n>0.0</td><td class=n>20.1</td><td class=n>0.0</td><td class=n>22.6</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+  <h2>MTP speculative decoding</h2>
+  <p class=muted>Qwen3.8-27B Q4_K_M with its multi-token-prediction head, Ollama's file in all three engines.</p>
+  <div class=scroll><table><thead><tr><th>Engine</th><th>Draft</th><th class=n>Generation tok/s</th><th class=n>Prompt tok/s</th></tr></thead><tbody>
+<tr><th scope=row>llama.cpp Vulkan</th><td>none</td><td class=n>12.4</td><td class=n>331</td></tr>
+<tr><th scope=row>llama.cpp Vulkan</th><td><code>--spec-type draft-mtp</code></td><td class=n><b>26.7</b> &plusmn; 0.7</td><td class=n>318</td></tr>
+<tr><th scope=row>llama.cpp ROCm</th><td>none</td><td class=n>11.7</td><td class=n>326</td></tr>
+<tr><th scope=row>llama.cpp ROCm</th><td><code>--spec-type draft-mtp</code></td><td class=n>20.5 &plusmn; 0.5</td><td class=n>314</td></tr>
+<tr><th scope=row>Ollama (ROCm)</th><td>built in</td><td class=n>20.3</td><td class=n>315</td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+  <h2>Model files</h2>
+  <div class=scroll><table><thead><tr><th>Model</th><th>Ollama tag</th><th>Ollama file loads in llama.cpp</th><th>llama.cpp file</th><th class=n>Size GiB</th></tr></thead><tbody>
+<tr><th scope=row>Qwen3.5-9B</th><td><code>qwen3.5:9b</code></td><td>no</td><td>lmstudio-community Qwen3.5-9B-Q4_K_M</td><td class=n>5.2</td></tr>
+<tr><th scope=row>gpt-oss-20b</th><td><code>gpt-oss:20b</code></td><td>no</td><td>gpt-oss-20b MXFP4 (file named Q8_0)</td><td class=n>11.3</td></tr>
+<tr><th scope=row>Mistral-Small-24B</th><td><code>mistral-small:24b</code></td><td>yes</td><td>Ollama&#x27;s file</td><td class=n>13.3</td></tr>
+<tr><th scope=row>Qwen3.8-27B</th><td><code>qwen3.8:27b-mtp-q4_K_M</code></td><td>yes</td><td>Ollama&#x27;s file (has the MTP head)</td><td class=n>15.7</td></tr>
+<tr><th scope=row>Gemma-4-26B-A4B</th><td><code>gemma4:26b</code></td><td>no</td><td>lmstudio-community gemma-4-26B-A4B-it-Q4_K_M</td><td class=n>15.6</td></tr>
+<tr><th scope=row>Qwen3-Coder-30B-A3B</th><td><code>qwen3-coder:30b</code></td><td>yes</td><td>Ollama&#x27;s file</td><td class=n>17.3</td></tr>
+<tr><th scope=row>Qwen3.6-35B-A3B</th><td><code>qwen3.6:35b</code></td><td>no</td><td>ggml-org Qwen3.6-35B-A3B-Q4_K_M</td><td class=n>19.1</td></tr>
+</tbody></table></div>
+</section>
+
+<footer>
+  <p>Method: each run gets a unique prompt prefix so no prompt cache is reused; one warm-up, then 3 measured runs, context 16384, power profile set to performance. Ollama runs with its service settings (flash attention, q8_0 KV cache, ROCm runner). Engines run one at a time. Measured with <code>scripts/bench-vs-ollama.py</code> from branch mev_ryzen395 (master a946eb541 plus the Ryzen AI scripts).</p>
+  <p>Raw data: data/models.csv, data/server_runs.csv.</p>
+</footer>
+</div>
+<div id=tip hidden></div>
+<script>
+// per-bar hover tooltip; the <title> on each bar is the fallback without script
+(() => {
+  const tip = document.getElementById("tip");
+  document.querySelectorAll(".chart [data-tip]").forEach(el => {
+    el.querySelector("title")?.remove();
+    el.addEventListener("pointermove", e => {
+      tip.textContent = el.dataset.tip; tip.hidden = false;
+      const x = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8);
+      tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px";
+    });
+    el.addEventListener("pointerleave", () => { tip.hidden = true; });
+  });
+})();
+</script>
+</body>
+</html>

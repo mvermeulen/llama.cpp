@@ -1,0 +1,8 @@
+model,type,params_b_total_active,quant,llama_cpp_file_gib,ollama_tag,ollama_file_loads_in_llama_cpp,llama_cpp_file
+Qwen3.5-9B,dense,9.7,Q4_K_M,5.2,qwen3.5:9b,no,lmstudio-community Qwen3.5-9B-Q4_K_M
+gpt-oss-20b,MoE,21 / 3.6,MXFP4,11.3,gpt-oss:20b,no,gpt-oss-20b MXFP4 (file named Q8_0)
+Mistral-Small-24B,dense,24,Q4_K_M,13.3,mistral-small:24b,yes,Ollama's file
+Qwen3.8-27B,dense,27,Q4_K_M,15.7,qwen3.8:27b-mtp-q4_K_M,yes,Ollama's file (has the MTP head)
+Gemma-4-26B-A4B,MoE,26 / 4,Q4_K_M,15.6,gemma4:26b,no,lmstudio-community gemma-4-26B-A4B-it-Q4_K_M
+Qwen3-Coder-30B-A3B,MoE,30 / 3,Q4_K_M,17.3,qwen3-coder:30b,yes,Ollama's file
+Qwen3.6-35B-A3B,MoE,35 / 3,Q4_K_M,19.1,qwen3.6:35b,no,ggml-org Qwen3.6-35B-A3B-Q4_K_M
