@@ -102,9 +102,13 @@ Runtime tips for this APU:
   - Check the iGPU is picked (not llvmpipe): ${BUILD_DIR}/bin/llama-cli --list-devices
   - Offload all layers to the iGPU: -ngl 99
   - Always use flash attention: -fa on (30-50% faster prompt processing)
-  - Faster long prompts: -ub 2048 -b 2048 (+12-71% at 4096 tokens on gfx1151, most on large MoE models; -ub 1024 is best on gfx1152)
+  - Faster long prompts: -ub 2048 -b 2048 (+11-27% at 4096 tokens on MoE models on the 390, -2 to +13% on dense models;
+    -ub 1024 is best on gfx1152)
   - A q8_0 KV cache halves its memory for ~1% speed: -ctk q8_0 -ctv q8_0
-  - Models with an MTP head (e.g. Qwen3.5-122B): --spec-type draft-mtp (+58% generation on gfx1151)
+  - Models with an MTP head (e.g. Qwen3.8-27B), or a public mtp-*.gguf draft (Gemma-4-26B-A4B, Qwen3.6-35B-A3B from ggml-org):
+    --spec-type draft-mtp [-md mtp-model.gguf] (+36-103% generation on the 390)
+  - On the 390 Vulkan generates fastest on all 7 tested models (5-38% ahead of ROCm), and it places the model in the
+    BIOS carve-out like ROCm does
   - EAGLE3 drafts for gpt-oss did not help on gfx1151 (0 to -14% generation, -13% prompt)
   - For CPU work use the physical core count: -t $(lscpu -p=CORE | grep -v '^#' | sort -u | wc -l)
   - Compare with the ROCm build: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1 -ub 512,2048 -p 512,4096

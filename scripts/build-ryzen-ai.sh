@@ -121,12 +121,16 @@ Build done: ${BUILD_DIR}/bin
 Runtime tips for this APU:
   - The iGPU shares system RAM. If the model does not fit in the BIOS carve-out, let it allocate beyond it with:
       export GGML_CUDA_ENABLE_UNIFIED_MEMORY=1
-    With a large carve-out (e.g. 96-160 GiB on Strix Halo) this is not needed.
+    With a 32 GiB carve-out (Ryzen AI Max PRO 390, 64 GB) ROCm puts the model in the carve-out, not in GTT;
+    a 19 GiB model (Qwen3.6-35B-A3B Q4_K_M) at 16k context peaked at 20.2 GiB
   - Offload all layers to the iGPU: -ngl 99
   - Always use flash attention: -fa on
-  - Faster long prompts: -ub 2048 -b 2048 (+7-23% at 4096 tokens on gfx1151, depending on model)
-  - On gfx1151 Vulkan generates 3-19% faster and prompts faster on all tested models but MiniMax-M2.1, see scripts/build-ryzen-ai-vulkan.sh
-  - Models with an MTP head (e.g. Qwen3.5-122B): --spec-type draft-mtp (+58% generation on gfx1151)
+  - MoE models: -ub 2048 -b 2048 (+3-15% prompt speed at 4096 tokens on the 390); dense models: keep the default
+    -ub 512, -ub 2048 is 1-4% slower for them
+  - On the 390 Vulkan generates 5-38% faster on all 7 tested models; ROCm prompts 3-12% faster on the dense models and
+    Gemma-4-26B-A4B, Vulkan on gpt-oss-20b and Qwen3.6-35B-A3B, see scripts/build-ryzen-ai-vulkan.sh
+  - Models with an MTP head (e.g. Qwen3.8-27B), or a public mtp-*.gguf draft (Gemma-4-26B-A4B, Qwen3.6-35B-A3B from ggml-org):
+    --spec-type draft-mtp [-md mtp-model.gguf] (+61-74% generation on the 390)
   - For CPU work use the physical core count: -t $(lscpu -p=CORE | grep -v '^#' | sort -u | wc -l)
   - Compare settings with: ${BUILD_DIR}/bin/llama-bench -m model.gguf -ngl 99 -fa 1 -ub 512,2048 -p 512,4096
 EOF
