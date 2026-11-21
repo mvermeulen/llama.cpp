@@ -1,0 +1,17 @@
+backend,model,cache_type,test,tps
+vulkan,qwen2.5-coder-7b,f16,pp2048,1788.34
+vulkan,qwen2.5-coder-7b,f16,tg128,91.75
+vulkan,qwen2.5-coder-7b,f16,pp2048@d16384,801.77
+vulkan,qwen2.5-coder-7b,f16,tg128@d16384,74.85
+vulkan,qwen2.5-coder-7b,q8_0,pp2048,1781.28
+vulkan,qwen2.5-coder-7b,q8_0,tg128,89.47
+vulkan,qwen2.5-coder-7b,q8_0,pp2048@d16384,797.67
+vulkan,qwen2.5-coder-7b,q8_0,tg128@d16384,74.69
+rocm,qwen2.5-coder-7b,f16,pp2048,1761.83
+rocm,qwen2.5-coder-7b,f16,tg128,87.90
+rocm,qwen2.5-coder-7b,f16,pp2048@d16384,932.01
+rocm,qwen2.5-coder-7b,f16,tg128@d16384,69.91
+rocm,qwen2.5-coder-7b,q8_0,pp2048,1767.90
+rocm,qwen2.5-coder-7b,q8_0,tg128,84.36
+rocm,qwen2.5-coder-7b,q8_0,pp2048@d16384,926.13
+rocm,qwen2.5-coder-7b,q8_0,tg128@d16384,72.53

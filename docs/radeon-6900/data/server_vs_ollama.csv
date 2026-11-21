@@ -1,0 +1,27 @@
+model,engine,prompt_tokens,prompt_tps,gen_tps
+gemma4-12b,ollama gemma4:12b,2885,819.8,88.03
+gemma4-12b,llama.cpp vulkan (GPU),2885,939.4,45.14
+gemma4-12b,llama.cpp rocm (GPU),2885,846.8,39.76
+llama3.2-3b,ollama llama3.2:3b,2491,3353.5,129.07
+llama3.2-3b,llama.cpp vulkan (GPU),2501,3439.9,139.34
+llama3.2-3b,llama.cpp rocm (GPU),2501,3362.9,125.78
+mistral-nemo-12b,ollama mistral-nemo:12b,2698,1383.0,54.36
+mistral-nemo-12b,llama.cpp vulkan (GPU),2698,1276.6,55.92
+mistral-nemo-12b,llama.cpp rocm (GPU),2698,1352.7,54.04
+qwen2.5-coder-7b,ollama qwen2.5-coder:latest,2646,1667.9,80.94
+qwen2.5-coder-7b,llama.cpp vulkan (GPU),2646,1727.8,83.83
+qwen2.5-coder-7b,llama.cpp rocm (GPU),2646,1718.2,81.87
+qwen3-4b,ollama qwen3:4b,2627,2575.4,102.68
+qwen3-4b,llama.cpp vulkan (GPU),2627,2557.1,111.69
+qwen3-4b,llama.cpp rocm (GPU),2627,2615.0,102.1
+qwen3.5-9b,ollama qwen3.5:9b,2689,1394.2,61.41
+qwen3.5-9b,llama.cpp vulkan (GPU),2689,1538.7,69.04
+qwen3.5-9b,llama.cpp rocm (GPU),2689,1448.3,63.51
+gemma4-12b,llama.cpp vulkan + gemma4-assistant draft (n-max 3),2885,940.4,90.0
+gemma4-12b,llama.cpp rocm + gemma4-assistant draft (n-max 3),2885,849.7,80.0
+gemma4-12b,llama.cpp vulkan + gemma4-assistant draft (n-max 4),2885,938.4,97.6
+ornith-1.5-9b,ollama ornith-1.5:9b,2689,1396.3,63.2
+ornith-1.5-9b,llama.cpp vulkan (GPU),2689,1539.9,69.1
+ornith-1.5-9b,llama.cpp vulkan + draft-mtp (n-max 3),2689,1441.9,115.2
+ornith-1.5-9b,llama.cpp vulkan + draft-mtp (n-max 2),2689,1439.5,107.6
+ornith-1.5-9b,llama.cpp vulkan + draft-mtp (n-max 4),2689,1441.8,107.2
