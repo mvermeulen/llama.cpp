@@ -1,0 +1,8 @@
+model,llama_bench_type,size_gib
+glm-4.5-air-q4,glm4moe 106B.A12B Q4_K - Medium,68.45
+gpt-oss-120b,"gpt-oss 120B unknown, may not work",60.87
+llama3.3-70b-q4,llama 70B Q4_K - Medium,39.59
+ornith-9b,qwen35 9B Q4_K - Medium,5.37
+qwen3.5-35b-a3b-q8,qwen35moe 35B.A3B Q8_0,35.21
+qwen3.6-35b-a3b-q4,qwen35moe 35B.A3B Q4_K - Medium,21.1
+qwen3.8-27b-q4,qwen35 27B Q4_K - Medium,15.42

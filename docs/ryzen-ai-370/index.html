@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ryzen AI 9 HX 370 LLM Benchmarks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+:root{
+  /* layout: one reading column, wide tables scroll in place; findings first, raw data last */
+  --bg:#f6f7f9; --panel:#ffffff; --fg:#17202b; --muted:#5b6676; --line:#dde2e9;
+  --accent:#0b7a75; --vk:#0a8f86; --rc:#c94a14; --ol:#7d55c8; --good:#15803d; --bad:#b42318;
+  --code-bg:#eef1f5;
+  --f-display:"Space Grotesk",system-ui,sans-serif; --f-body:"IBM Plex Sans",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141a; --panel:#161d26; --fg:#e6ebf1; --muted:#9aa6b6; --line:#2a3441;
+  --accent:#3fb8b0; --vk:#1fa198; --rc:#e2702f; --ol:#9d7ae6; --good:#4ade80; --bad:#f87171; --code-bg:#1d2632; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141a; --panel:#161d26; --fg:#e6ebf1; --muted:#9aa6b6; --line:#2a3441;
+  --accent:#3fb8b0; --vk:#1fa198; --rc:#e2702f; --ol:#9d7ae6; --good:#4ade80; --bad:#f87171; --code-bg:#1d2632; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body)}
+.wrap{max-width:1040px;margin:0 auto;padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:36px}
+header{display:grid;gap:10px}
+.eyebrow{font:500 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:600 clamp(26px,4vw,38px)/1.15 var(--f-display);margin:0;text-wrap:balance}
+h2{font:600 22px/1.25 var(--f-display);margin:0 0 12px;text-wrap:balance}
+h3{font:600 16px var(--f-display);margin:0 0 8px}
+p{margin:0;max-width:72ch}
+.muted,.dim{color:var(--muted)}
+.specs{display:flex;flex-wrap:wrap;gap:6px 18px;font:13px var(--f-mono);color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:grid;gap:2px;align-content:start}
+.tile .v{font:600 28px var(--f-display);font-variant-numeric:tabular-nums}
+.tile .k{font-size:13px;color:var(--muted)}
+section{display:grid;gap:12px;min-width:0}
+ul.find{margin:0;padding-left:20px;display:grid;gap:6px;max-width:80ch}
+.rec{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:16px 18px;display:grid;gap:10px;min-width:0}
+pre{margin:0;background:var(--code-bg);border-radius:6px;padding:10px 12px;overflow-x:auto;font:13px/1.5 var(--f-mono)}
+code{font:13px var(--f-mono)}
+.scroll{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+thead th{font:600 12px var(--f-body);color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--line)}
+tbody th{font-weight:500}
+.n{text-align:right}
+.good{color:var(--good);font-weight:600}.bad{color:var(--bad);font-weight:600}
+.chart{width:100%;height:auto;display:block}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .tick{fill:var(--muted);font:11px var(--f-mono)}
+.chart .lbl{fill:var(--fg);font:13px var(--f-body)}
+.chart .val{fill:var(--muted);font:11px var(--f-mono)}
+.s-vk{fill:var(--vk)}.s-rc{fill:var(--rc)}.s-ol{fill:var(--ol)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.cards>div{min-width:0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+details+details{margin-top:6px}
+summary{cursor:pointer;font-weight:500}
+summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
+
+.chart path{cursor:default}.chart path:hover{opacity:.8}
+#tip{position:fixed;pointer-events:none;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font:13px var(--f-body);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+</style>
+</head>
+<body>
+
+<div class=wrap>
+<header>
+  <div class=eyebrow>llama.cpp branch mev_ryzen370 &middot; 2026-11-20</div>
+  <h1>Ryzen AI 9 HX 370 LLM benchmarks</h1>
+  <p class=muted>Seven GGUF models from 9B to 120B parameters, run fully on the integrated GPU with llama.cpp (Vulkan and ROCm), compared against Ollama on the same weights where its files load in llama.cpp.</p>
+  <div class=specs><span>CPU: 12C/24T Zen 5 (4 Zen 5 + 8 Zen 5c), AVX-512</span><span>GPU: Radeon 890M, gfx1150, 16 CUs</span><span>Memory: 96 GB DDR5-5600, 128-bit, 80 GiB usable by the GPU</span><span>ROCm 10.2 (HIP 7.17) &middot; Mesa 26.0.8 RADV</span></div>
+</header>
+
+<div class=tiles>
+  <div class=tile><span class=v>23.0</span><span class=k>tok/s generation, Qwen3.6-35B-A3B (fastest in llama.cpp)</span></div>
+  <div class=tile><span class=v>14.2</span><span class=k>tok/s generation, gpt-oss-120b (117B, largest)</span></div>
+  <div class=tile><span class=v>2.3x</span><span class=k>generation from MTP speculative decoding, Qwen3.8-27B</span></div>
+  <div class=tile><span class=v>~80 GB/s</span><span class=k>effective memory bandwidth in generation, 90% of the DDR5-5600 peak</span></div>
+</div>
+
+<section>
+  <h2>Recommended settings</h2>
+  <div class=rec>
+    <p>Build both backends with the branch scripts and serve with Vulkan: all layers on the GPU, flash attention, and a 2048-token micro-batch for MoE models only. Check the machine first; the checks below found the problems this setup needed fixing.</p>
+    <pre>./scripts/check-ryzen-ai.sh             # read-only setup check: ROCm arch, GTT size, Ollama GPU use, ...
+./scripts/build-ryzen-ai-vulkan.sh      # -> build-vulkan
+./scripts/build-ryzen-ai.sh             # -> build-rocm (gfx1150)
+
+build-vulkan/bin/llama-server -m model.gguf -ngl 99 -fa on --jinja
+#   + -ub 2048 -b 2048               for MoE models (Qwen3.x-A3B, GLM-4.5-Air, gpt-oss): +21-34% on 4k prompts
+#   + --spec-type draft-mtp          for models with an MTP head (Qwen3.8-27B): 2.3x generation
+#   + -ctk q8_0 -ctv q8_0            to halve KV cache memory for 0-2% prompt speed
+build-rocm/bin/llama-server ...      # prompt-heavy work on gpt-oss-120b (-ub 2048) or Llama 3.3 70B</pre>
+    <p class=muted>System: GTT raised to 80 GiB with <code>ttm.pages_limit=20971520</code> on the kernel command line (default is half of RAM, too small for gpt-oss-120b or GLM-4.5-Air), <code>powerprofilesctl set performance</code> while benchmarking, and Ollama switched to its Vulkan runner with <code>OLLAMA_IGPU_ENABLE=1</code> (without it Ollama 0.40 ignores the iGPU and runs on the CPU).</p>
+  </div>
+</section>
+
+<section>
+  <h2>Findings</h2>
+  <ul class=find>
+    <li><b>Generation is memory bound, so the backend barely matters for it.</b> Every dense model reads its weights at about 80 GB/s, 90% of the 89.6 GB/s DDR5-5600 peak; Vulkan generates up to 5% faster than ROCm, and ROCm at most 2% faster (gpt-oss-120b). Expect roughly 80 / (GB of weights read per token) tok/s. gpt-oss-120b stays well below that (14 tok/s for about 3 GB per token), which points to its MXFP4 kernels being compute bound on the 16 CUs.</li>
+    <li><b>Vulkan is the better default, by a small margin.</b> It prompts faster on the Qwen3.x and GLM MoE models; ROCm prompts faster on gpt-oss-120b (+14% at 4096 tokens) and Llama 3.3 70B (+26% at 512).</li>
+    <li><b>-ub 2048 -b 2048 helps MoE models only.</b> It adds 21-34% to Vulkan prompt speed at 4096 tokens on the four MoE models and -6 to +3% on dense ones. ROCm prompt speed is not monotonic in -ub on MoE models (gpt-oss-120b: 290 / 239 / 425 tok/s at 512 / 1024 / 2048), and the Max+ 495 data shows the same dip at 1024.</li>
+    <li><b>MTP speculative decoding more than doubles Qwen3.8-27B.</b> 4.6 to 10.5 tok/s. Ollama's build of the same file reaches 9.7, about twice the plain rate, so it uses the MTP head as well.</li>
+    <li><b>llama.cpp matches Ollama on generation and prompts faster, except on Qwen3.6-35B-A3B.</b> There Ollama generates 17-20% faster. It is not the quantization (Ollama's file is the heavier one: Q6_K experts against Q5_K, same ~2.3 GiB of always-read weights); Ollama runs this architecture on its own engine, and its file does not load in upstream llama.cpp.</li>
+    <li><b>Ollama is faster on Vulkan.</b> Its Vulkan runner generates faster than its ROCm runner on 6 of 9 models (+3% generation, +4% prompt, geometric mean), so the service now runs on Vulkan.</li>
+    <li><b>The Max+ 495 is 2.8-4.2x faster on the same models.</b> It has twice the memory bus width (256-bit against 128-bit) and a much larger GPU.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Generation speed</h2>
+  <p class=muted>llama-server and Ollama, 256 tokens generated after a 2.5-2.7k token prompt (64 for Llama 3.3 70B), mean of 3 runs (2 for Llama). Vulkan uses the recommended settings (-ub 2048 for MoE models, --spec-type draft-mtp for Qwen3.8-27B, whose Ollama build also drafts with MTP); the ROCm runs use no draft. Hover a bar for its value; the fastest in each group is labeled.</p>
+  <div class=legend><span><i style="background:var(--vk)"></i>llama.cpp Vulkan (recommended settings)</span><span><i style="background:var(--rc)"></i>llama.cpp ROCm</span><span><i style="background:var(--ol)"></i>Ollama (Vulkan)</span></div>
+  <div class=scroll><svg viewBox="0 0 760 307" role="img" aria-label="Generation speed in tokens per second" class="chart">
+<line x1="180.0" x2="180.0" y1="18" y2="307" class="grid"/>
+<text x="180.0" y="12" class="tick" text-anchor="middle">0</text>
+<line x1="266.7" x2="266.7" y1="18" y2="307" class="grid"/>
+<text x="266.7" y="12" class="tick" text-anchor="middle">5</text>
+<line x1="353.3" x2="353.3" y1="18" y2="307" class="grid"/>
+<text x="353.3" y="12" class="tick" text-anchor="middle">10</text>
+<line x1="440.0" x2="440.0" y1="18" y2="307" class="grid"/>
+<text x="440.0" y="12" class="tick" text-anchor="middle">15</text>
+<line x1="526.7" x2="526.7" y1="18" y2="307" class="grid"/>
+<text x="526.7" y="12" class="tick" text-anchor="middle">20</text>
+<line x1="613.3" x2="613.3" y1="18" y2="307" class="grid"/>
+<text x="613.3" y="12" class="tick" text-anchor="middle">25</text>
+<line x1="700.0" x2="700.0" y1="18" y2="307" class="grid"/>
+<text x="700.0" y="12" class="tick" text-anchor="middle">30</text>
+<text x="170" y="47.5" class="lbl" text-anchor="end">Qwen3.6-35B-A3B</text>
+<path d="M180.0 22.0h394.0a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-394.0z" class="s-vk" data-tip="Qwen3.6-35B-A3B - llama.cpp Vulkan -ub 2048: 23.0 tok/s"><title>Qwen3.6-35B-A3B - llama.cpp Vulkan -ub 2048: 23.0 tok/s</title></path>
+<path d="M180.0 37.0h379.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-379.4z" class="s-rc" data-tip="Qwen3.6-35B-A3B - llama.cpp ROCm -ub 1024: 22.1 tok/s"><title>Qwen3.6-35B-A3B - llama.cpp ROCm -ub 1024: 22.1 tok/s</title></path>
+<path d="M180.0 52.0h461.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-461.2z" class="s-ol" data-tip="Qwen3.6-35B-A3B - Ollama (Vulkan): 26.8 tok/s"><title>Qwen3.6-35B-A3B - Ollama (Vulkan): 26.8 tok/s</title></path>
+<text x="650.2" y="62.5" class="val">26.8</text>
+<text x="170" y="104.5" class="lbl" text-anchor="end">gpt-oss-120b</text>
+<path d="M180.0 79.0h242.7a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-242.7z" class="s-vk" data-tip="gpt-oss-120b - llama.cpp Vulkan -ub 2048: 14.2 tok/s"><title>gpt-oss-120b - llama.cpp Vulkan -ub 2048: 14.2 tok/s</title></path>
+<text x="431.7" y="89.5" class="val">14.2</text>
+<path d="M180.0 94.0h237.8a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-237.8z" class="s-rc" data-tip="gpt-oss-120b - llama.cpp ROCm -ub 2048: 13.9 tok/s"><title>gpt-oss-120b - llama.cpp ROCm -ub 2048: 13.9 tok/s</title></path>
+<path d="M180.0 109.0h240.9a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-240.9z" class="s-ol" data-tip="gpt-oss-120b - Ollama (Vulkan): 14.1 tok/s"><title>gpt-oss-120b - Ollama (Vulkan): 14.1 tok/s</title></path>
+<text x="170" y="161.5" class="lbl" text-anchor="end">Ornith-1.5 9B</text>
+<path d="M180.0 136.0h237.8a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-237.8z" class="s-vk" data-tip="Ornith-1.5 9B - llama.cpp Vulkan defaults: 13.9 tok/s"><title>Ornith-1.5 9B - llama.cpp Vulkan defaults: 13.9 tok/s</title></path>
+<path d="M180.0 151.0h238.5a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-238.5z" class="s-rc" data-tip="Ornith-1.5 9B - llama.cpp ROCm -ub 1024: 14.0 tok/s"><title>Ornith-1.5 9B - llama.cpp ROCm -ub 1024: 14.0 tok/s</title></path>
+<path d="M180.0 166.0h240.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-240.2z" class="s-ol" data-tip="Ornith-1.5 9B - Ollama (Vulkan): 14.1 tok/s"><title>Ornith-1.5 9B - Ollama (Vulkan): 14.1 tok/s</title></path>
+<text x="429.2" y="176.5" class="val">14.1</text>
+<text x="170" y="218.5" class="lbl" text-anchor="end">Qwen3.8-27B</text>
+<path d="M180.0 193.0h178.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-178.2z" class="s-vk" data-tip="Qwen3.8-27B - llama.cpp Vulkan -ub 2048 mtp: 10.5 tok/s"><title>Qwen3.8-27B - llama.cpp Vulkan -ub 2048 mtp: 10.5 tok/s</title></path>
+<text x="367.2" y="203.5" class="val">10.5</text>
+<path d="M180.0 208.0h73.8a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-73.8z" class="s-rc" data-tip="Qwen3.8-27B - llama.cpp ROCm -ub 1024: 4.5 tok/s"><title>Qwen3.8-27B - llama.cpp ROCm -ub 1024: 4.5 tok/s</title></path>
+<path d="M180.0 223.0h154.1a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-154.1z" class="s-ol" data-tip="Qwen3.8-27B - Ollama (Vulkan): 9.1 tok/s"><title>Qwen3.8-27B - Ollama (Vulkan): 9.1 tok/s</title></path>
+<text x="170" y="275.5" class="lbl" text-anchor="end">Llama 3.3 70B</text>
+<path d="M180.0 250.0h28.2a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-28.2z" class="s-vk" data-tip="Llama 3.3 70B - llama.cpp Vulkan defaults: 1.9 tok/s"><title>Llama 3.3 70B - llama.cpp Vulkan defaults: 1.9 tok/s</title></path>
+<text x="217.2" y="260.5" class="val">1.9</text>
+<path d="M180.0 265.0h27.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-27.4z" class="s-rc" data-tip="Llama 3.3 70B - llama.cpp ROCm -ub 1024: 1.8 tok/s"><title>Llama 3.3 70B - llama.cpp ROCm -ub 1024: 1.8 tok/s</title></path>
+<path d="M180.0 280.0h28.1a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-28.1z" class="s-ol" data-tip="Llama 3.3 70B - Ollama (Vulkan): 1.9 tok/s"><title>Llama 3.3 70B - Ollama (Vulkan): 1.9 tok/s</title></path>
+</svg></div>
+</section>
+
+<section>
+  <h2>Prompt processing speed</h2>
+  <p class=muted>Same runs, prompt tokens per second.</p>
+  <div class=legend><span><i style="background:var(--vk)"></i>llama.cpp Vulkan (recommended settings)</span><span><i style="background:var(--rc)"></i>llama.cpp ROCm</span><span><i style="background:var(--ol)"></i>Ollama (Vulkan)</span></div>
+  <div class=scroll><svg viewBox="0 0 760 307" role="img" aria-label="Prompt speed in tokens per second" class="chart">
+<line x1="180.0" x2="180.0" y1="18" y2="307" class="grid"/>
+<text x="180.0" y="12" class="tick" text-anchor="middle">0</text>
+<line x1="254.3" x2="254.3" y1="18" y2="307" class="grid"/>
+<text x="254.3" y="12" class="tick" text-anchor="middle">100</text>
+<line x1="328.6" x2="328.6" y1="18" y2="307" class="grid"/>
+<text x="328.6" y="12" class="tick" text-anchor="middle">200</text>
+<line x1="402.9" x2="402.9" y1="18" y2="307" class="grid"/>
+<text x="402.9" y="12" class="tick" text-anchor="middle">300</text>
+<line x1="477.1" x2="477.1" y1="18" y2="307" class="grid"/>
+<text x="477.1" y="12" class="tick" text-anchor="middle">400</text>
+<line x1="551.4" x2="551.4" y1="18" y2="307" class="grid"/>
+<text x="551.4" y="12" class="tick" text-anchor="middle">500</text>
+<line x1="625.7" x2="625.7" y1="18" y2="307" class="grid"/>
+<text x="625.7" y="12" class="tick" text-anchor="middle">600</text>
+<line x1="700.0" x2="700.0" y1="18" y2="307" class="grid"/>
+<text x="700.0" y="12" class="tick" text-anchor="middle">700</text>
+<text x="170" y="47.5" class="lbl" text-anchor="end">Qwen3.6-35B-A3B</text>
+<path d="M180.0 22.0h472.6a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-472.6z" class="s-vk" data-tip="Qwen3.6-35B-A3B - llama.cpp Vulkan -ub 2048: 641.6 tok/s"><title>Qwen3.6-35B-A3B - llama.cpp Vulkan -ub 2048: 641.6 tok/s</title></path>
+<text x="661.6" y="32.5" class="val">641.6</text>
+<path d="M180.0 37.0h432.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-432.4z" class="s-rc" data-tip="Qwen3.6-35B-A3B - llama.cpp ROCm -ub 1024: 587.5 tok/s"><title>Qwen3.6-35B-A3B - llama.cpp ROCm -ub 1024: 587.5 tok/s</title></path>
+<path d="M180.0 52.0h385.3a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-385.3z" class="s-ol" data-tip="Qwen3.6-35B-A3B - Ollama (Vulkan): 524.1 tok/s"><title>Qwen3.6-35B-A3B - Ollama (Vulkan): 524.1 tok/s</title></path>
+<text x="170" y="104.5" class="lbl" text-anchor="end">gpt-oss-120b</text>
+<path d="M180.0 79.0h247.7a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-247.7z" class="s-vk" data-tip="gpt-oss-120b - llama.cpp Vulkan -ub 2048: 338.8 tok/s"><title>gpt-oss-120b - llama.cpp Vulkan -ub 2048: 338.8 tok/s</title></path>
+<path d="M180.0 94.0h265.5a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-265.5z" class="s-rc" data-tip="gpt-oss-120b - llama.cpp ROCm -ub 2048: 362.8 tok/s"><title>gpt-oss-120b - llama.cpp ROCm -ub 2048: 362.8 tok/s</title></path>
+<text x="454.5" y="104.5" class="val">362.8</text>
+<path d="M180.0 109.0h189.8a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-189.8z" class="s-ol" data-tip="gpt-oss-120b - Ollama (Vulkan): 260.9 tok/s"><title>gpt-oss-120b - Ollama (Vulkan): 260.9 tok/s</title></path>
+<text x="170" y="161.5" class="lbl" text-anchor="end">Ornith-1.5 9B</text>
+<path d="M180.0 136.0h315.7a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-315.7z" class="s-vk" data-tip="Ornith-1.5 9B - llama.cpp Vulkan defaults: 430.3 tok/s"><title>Ornith-1.5 9B - llama.cpp Vulkan defaults: 430.3 tok/s</title></path>
+<text x="504.7" y="146.5" class="val">430.3</text>
+<path d="M180.0 151.0h261.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-261.4z" class="s-rc" data-tip="Ornith-1.5 9B - llama.cpp ROCm -ub 1024: 357.3 tok/s"><title>Ornith-1.5 9B - llama.cpp ROCm -ub 1024: 357.3 tok/s</title></path>
+<path d="M180.0 166.0h302.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-302.4z" class="s-ol" data-tip="Ornith-1.5 9B - Ollama (Vulkan): 412.4 tok/s"><title>Ornith-1.5 9B - Ollama (Vulkan): 412.4 tok/s</title></path>
+<text x="170" y="218.5" class="lbl" text-anchor="end">Qwen3.8-27B</text>
+<path d="M180.0 193.0h87.5a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-87.5z" class="s-vk" data-tip="Qwen3.8-27B - llama.cpp Vulkan -ub 2048 mtp: 123.2 tok/s"><title>Qwen3.8-27B - llama.cpp Vulkan -ub 2048 mtp: 123.2 tok/s</title></path>
+<path d="M180.0 208.0h80.4a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-80.4z" class="s-rc" data-tip="Qwen3.8-27B - llama.cpp ROCm -ub 1024: 113.6 tok/s"><title>Qwen3.8-27B - llama.cpp ROCm -ub 1024: 113.6 tok/s</title></path>
+<path d="M180.0 223.0h88.1a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-88.1z" class="s-ol" data-tip="Qwen3.8-27B - Ollama (Vulkan): 124.0 tok/s"><title>Qwen3.8-27B - Ollama (Vulkan): 124.0 tok/s</title></path>
+<text x="277.1" y="233.5" class="val">124.0</text>
+<text x="170" y="275.5" class="lbl" text-anchor="end">Llama 3.3 70B</text>
+<path d="M180.0 250.0h30.9a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-30.9z" class="s-vk" data-tip="Llama 3.3 70B - llama.cpp Vulkan defaults: 47.0 tok/s"><title>Llama 3.3 70B - llama.cpp Vulkan defaults: 47.0 tok/s</title></path>
+<path d="M180.0 265.0h33.9a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-33.9z" class="s-rc" data-tip="Llama 3.3 70B - llama.cpp ROCm -ub 1024: 51.0 tok/s"><title>Llama 3.3 70B - llama.cpp ROCm -ub 1024: 51.0 tok/s</title></path>
+<text x="222.9" y="275.5" class="val">51.0</text>
+<path d="M180.0 280.0h31.9a4.0 4.0 0 0 1 4.0 4.0v5.0a4.0 4.0 0 0 1 -4.0 4.0h-31.9z" class="s-ol" data-tip="Llama 3.3 70B - Ollama (Vulkan): 48.3 tok/s"><title>Llama 3.3 70B - Ollama (Vulkan): 48.3 tok/s</title></path>
+</svg></div>
+</section>
+
+<section>
+  <h2>All models</h2>
+  <p class=muted>llama-bench -ngl 99 -fa 1, tok/s. Generation (tg) at -ub 512; prompt (pp) at the best -ub per backend, which is shown next to it. Llama 3.3 70B was measured at pp512 / tg32 only.</p>
+  <div class=scroll><table><thead><tr><th>Model</th><th>Type</th><th>Quant</th><th class=n>Params B<br>total / active</th><th class=n>Size GiB</th><th class=n>Vulkan tg</th><th class=n>ROCm tg</th><th class=n>Vulkan pp4096<br>best -ub</th><th class=n>ROCm pp4096<br>best -ub</th><th class=n>Vulkan -ub 2048<br>vs 512</th></tr></thead><tbody><tr><th scope=row>Qwen3.6-35B-A3B</th><td>MoE</td><td>UD-Q4_K_M</td><td class=n>35 / 3</td><td class=n>21.1</td><td class=n><b>23.3</b></td><td class=n>22.6</td><td class=n><b>684</b> <span class=dim>ub2048</span></td><td class=n>604 <span class=dim>ub1024</span></td><td class=n>+21%</td></tr><tr><th scope=row>Qwen3.5-35B-A3B</th><td>MoE</td><td>Q8_0</td><td class=n>35 / 3</td><td class=n>35.2</td><td class=n><b>20.3</b></td><td class=n>19.3</td><td class=n><b>662</b> <span class=dim>ub2048</span></td><td class=n>628 <span class=dim>ub2048</span></td><td class=n>+28%</td></tr><tr><th scope=row>gpt-oss-120b</th><td>MoE</td><td>MXFP4</td><td class=n>117 / 5.1</td><td class=n>60.9</td><td class=n>13.7</td><td class=n><b>14.0</b></td><td class=n>372 <span class=dim>ub2048</span></td><td class=n><b>425</b> <span class=dim>ub2048</span></td><td class=n>+34%</td></tr><tr><th scope=row>Ornith-1.5 9B</th><td>dense</td><td>Q4_K_M</td><td class=n>9.2</td><td class=n>5.4</td><td class=n><b>14.2</b></td><td class=n>14.2</td><td class=n>432 <span class=dim>ub512</span></td><td class=n><b>435</b> <span class=dim>ub512</span></td><td class=n>-4%</td></tr><tr><th scope=row>GLM-4.5-Air</th><td>MoE</td><td>Q4_K_M</td><td class=n>106 / 12</td><td class=n>68.5</td><td class=n><b>8.7</b></td><td class=n>8.4</td><td class=n><b>193</b> <span class=dim>ub2048</span></td><td class=n>185 <span class=dim>ub2048</span></td><td class=n>+29%</td></tr><tr><th scope=row>Qwen3.8-27B</th><td>dense</td><td>UD-Q4_K_M</td><td class=n>27</td><td class=n>15.4</td><td class=n><b>4.7</b></td><td class=n>4.7</td><td class=n>147 <span class=dim>ub512</span></td><td class=n><b>153</b> <span class=dim>ub512</span></td><td class=n>-3%</td></tr><tr><th scope=row>Llama 3.3 70B</th><td>dense</td><td>Q4_K_M</td><td class=n>70</td><td class=n>39.6</td><td class=n><b>1.9</b></td><td class=n>1.8</td><td class=n>48 <span class=dim>ub1024</span></td><td class=n><b>60</b> <span class=dim>ub1024</span></td><td class=n>+1% <span class=dim>(pp512)</span></td></tr></tbody></table></div>
+</section>
+
+<section>
+  <h2>llama.cpp versus Ollama</h2>
+  <p class=muted>Best llama.cpp configuration against the better Ollama backend, same prompt. Four models use the identical GGUF file in both engines (read from Ollama's blob store); for Qwen3.6-35B-A3B Ollama's file does not load in llama.cpp, so llama.cpp runs Unsloth's UD-Q4_K_M.</p>
+  <div class=scroll><table><thead><tr><th>Model</th><th>Weights</th><th class=n>Ollama tg<br>best backend</th><th class=n>llama.cpp tg<br>best config</th><th class=n>Change</th><th class=n>Ollama pp</th><th class=n>llama.cpp pp</th><th class=n>Change</th></tr></thead><tbody><tr><th scope=row>Qwen3.6-35B-A3B</th><td>different files</td><td class=n>27.7</td><td class=n>23.1 <span class=dim>Vulkan -ub 2048 q8 KV</span></td><td class=n><span class=bad>-17%</span></td><td class=n>524</td><td class=n>642 <span class=dim>Vulkan -ub 2048</span></td><td class=n>+22%</td></tr><tr><th scope=row>gpt-oss-120b</th><td>same file</td><td class=n>14.1</td><td class=n>14.2 <span class=dim>Vulkan defaults</span></td><td class=n><span>+1%</span></td><td class=n>284</td><td class=n>363 <span class=dim>ROCm -ub 2048</span></td><td class=n>+28%</td></tr><tr><th scope=row>Ornith-1.5 9B</th><td>same file</td><td class=n>14.1</td><td class=n>14.2 <span class=dim>Vulkan -ub 2048 q8 KV</span></td><td class=n><span>+1%</span></td><td class=n>412</td><td class=n>430 <span class=dim>Vulkan defaults</span></td><td class=n>+4%</td></tr><tr><th scope=row>Qwen3.8-27B</th><td>same file</td><td class=n>9.7</td><td class=n>10.5 <span class=dim>Vulkan -ub 2048 mtp</span></td><td class=n><span>+9%</span></td><td class=n>124</td><td class=n>126 <span class=dim>Vulkan defaults</span></td><td class=n>+2%</td></tr><tr><th scope=row>Llama 3.3 70B</th><td>same file</td><td class=n>1.9</td><td class=n>1.9 <span class=dim>Vulkan defaults</span></td><td class=n><span>+1%</span></td><td class=n>50</td><td class=n>51 <span class=dim>ROCm -ub 1024</span></td><td class=n>+1%</td></tr></tbody></table></div>
+</section>
+
+<section>
+  <h2>Ollama: ROCm or Vulkan</h2>
+  <p class=muted>Ollama 0.40.16 with flash attention and a q8_0 KV cache. ROCm is the service as installed; Vulkan is a second instance with OLLAMA_VULKAN=1 and ROCm hidden. The last four models are Ollama-only (128 generated tokens, 2 runs).</p>
+  <div class=scroll><table><thead><tr><th>Model</th><th class=n>ROCm tg</th><th class=n>Vulkan tg</th><th class=n>Vulkan vs ROCm</th><th class=n>ROCm pp</th><th class=n>Vulkan pp</th><th class=n>Vulkan vs ROCm</th></tr></thead><tbody><tr><th scope=row>Ornith-1.5 9B</th><td class=n>13.9</td><td class=n>14.1</td><td class=n>+1%</td><td class=n>383</td><td class=n>412</td><td class=n>+8%</td></tr><tr><th scope=row>Qwen3.6-35B-A3B</th><td class=n>27.7</td><td class=n>26.8</td><td class=n>-3%</td><td class=n>482</td><td class=n>524</td><td class=n>+9%</td></tr><tr><th scope=row>Qwen3.8-27B</th><td class=n>9.7</td><td class=n>9.1</td><td class=n>-6%</td><td class=n>110</td><td class=n>124</td><td class=n>+13%</td></tr><tr><th scope=row>gpt-oss-120b</th><td class=n>13.8</td><td class=n>14.1</td><td class=n>+2%</td><td class=n>284</td><td class=n>261</td><td class=n>-8%</td></tr><tr><th scope=row>Llama 3.3 70B</th><td class=n>1.8</td><td class=n>1.9</td><td class=n>+5%</td><td class=n>50</td><td class=n>48</td><td class=n>-4%</td></tr><tr><th scope=row>gemma4:26b</th><td class=n>21.0</td><td class=n>22.3</td><td class=n>+6%</td><td class=n>419</td><td class=n>520</td><td class=n>+24%</td></tr><tr><th scope=row>gpt-oss:20b</th><td class=n>17.6</td><td class=n>18.3</td><td class=n>+4%</td><td class=n>628</td><td class=n>553</td><td class=n>-12%</td></tr><tr><th scope=row>qwen3-coder-next:q4_K_M</th><td class=n>21.7</td><td class=n>21.4</td><td class=n>-1%</td><td class=n>308</td><td class=n>296</td><td class=n>-4%</td></tr><tr><th scope=row>qwen3-coder:30b</th><td class=n>24.8</td><td class=n>30.0</td><td class=n>+21%</td><td class=n>484</td><td class=n>566</td><td class=n>+17%</td></tr><tr><th scope=row><i>geometric mean</i></th><td class=n></td><td class=n></td><td class=n><b>+3%</b></td><td class=n></td><td class=n></td><td class=n><b>+4%</b></td></tr></tbody></table></div>
+</section>
+
+<section>
+  <h2>MTP speculative decoding</h2>
+  <p class=muted>Qwen3.8-27B Q4_K_M with its multi-token-prediction head, same file in both engines.</p>
+  <div class=scroll><table><thead><tr><th>Engine</th><th class=n>Draft</th><th class=n>Generation tok/s</th><th class=n>Prompt tok/s</th></tr></thead><tbody><tr><th scope=row>llama.cpp Vulkan -ub 2048</th><td class=n>none</td><td class=n>4.6</td><td class=n>122</td></tr><tr><th scope=row>llama.cpp Vulkan -ub 2048</th><td class=n>--spec-type draft-mtp</td><td class=n><b>10.5</b> &plusmn; 0.7</td><td class=n>123</td></tr><tr><th scope=row>Ollama ROCm</th><td class=n>built in</td><td class=n>9.7</td><td class=n>110</td></tr><tr><th scope=row>Ollama Vulkan</th><td class=n>built in</td><td class=n>9.1</td><td class=n>124</td></tr></tbody></table></div>
+</section>
+
+<section>
+  <h2>HX 370 versus Ryzen AI Max+ 495</h2>
+  <p class=muted>llama-bench Vulkan on the same GGUF models: tg128 at -ub 512, pp4096 at -ub 2048. Max+ 495 numbers from branch mev_ryzen495.</p>
+  <div class=scroll><table><thead><tr><th>Model</th><th class=n>HX 370 tg</th><th class=n>Max+ 495 tg</th><th class=n>495 / 370</th><th class=n>HX 370 pp4096</th><th class=n>Max+ 495 pp4096</th><th class=n>495 / 370</th></tr></thead><tbody><tr><th scope=row>Qwen3.5-35B-A3B Q8_0</th><td class=n>20.3</td><td class=n>55.8</td><td class=n>2.8x</td><td class=n>662</td><td class=n>2203</td><td class=n>3.3x</td></tr><tr><th scope=row>GLM-4.5-Air Q4_K_M</th><td class=n>8.7</td><td class=n>25.6</td><td class=n>2.9x</td><td class=n>193</td><td class=n>571</td><td class=n>3.0x</td></tr><tr><th scope=row>gpt-oss-120b MXFP4</th><td class=n>13.7</td><td class=n>57.2</td><td class=n>4.2x</td><td class=n>372</td><td class=n>1535</td><td class=n>4.1x</td></tr></tbody></table></div>
+</section>
+
+<section>
+  <h2>llama-bench detail</h2>
+  <p class=muted>llama-bench -ngl 99 -fa 1 -ub 512,1024,2048 -b 2048 -p 512,4096 -n 128 -r 2 per backend (Ornith also without flash attention). Open a model to see its numbers in tok/s.</p>
+  <div><details><summary>Qwen3.6-35B-A3B</summary><div class=scroll><table><thead><tr><th>Backend</th><th>Test</th><th class=n>-ub 512</th><th class=n>-ub 1024</th><th class=n>-ub 2048</th><th class=n>2048 vs 512</th></tr></thead><tbody><tr><th scope=row>Vulkan</th><td>pp512</td><td class=n>580.6</td><td class=n>574.3</td><td class=n>584.1</td><td class=n>+1%</td></tr><tr><th scope=row>Vulkan</th><td>pp4096</td><td class=n>563.4</td><td class=n>655.9</td><td class=n>683.7</td><td class=n>+21%</td></tr><tr><th scope=row>Vulkan</th><td>tg128</td><td class=n>23.3</td><td class=n>23.3</td><td class=n>23.3</td><td class=n>-0%</td></tr><tr><th scope=row>ROCm</th><td>pp512</td><td class=n>572.0</td><td class=n>580.2</td><td class=n>579.7</td><td class=n>+1%</td></tr><tr><th scope=row>ROCm</th><td>pp4096</td><td class=n>535.9</td><td class=n>603.7</td><td class=n>482.8</td><td class=n>-10%</td></tr><tr><th scope=row>ROCm</th><td>tg128</td><td class=n>22.6</td><td class=n>22.5</td><td class=n>22.5</td><td class=n>-0%</td></tr></tbody></table></div></details><details><summary>Qwen3.5-35B-A3B</summary><div class=scroll><table><thead><tr><th>Backend</th><th>Test</th><th class=n>-ub 512</th><th class=n>-ub 1024</th><th class=n>-ub 2048</th><th class=n>2048 vs 512</th></tr></thead><tbody><tr><th scope=row>Vulkan</th><td>pp512</td><td class=n>539.7</td><td class=n>528.4</td><td class=n>536.0</td><td class=n>-1%</td></tr><tr><th scope=row>Vulkan</th><td>pp4096</td><td class=n>517.8</td><td class=n>611.6</td><td class=n>662.4</td><td class=n>+28%</td></tr><tr><th scope=row>Vulkan</th><td>tg128</td><td class=n>20.3</td><td class=n>20.3</td><td class=n>20.3</td><td class=n>+0%</td></tr><tr><th scope=row>ROCm</th><td>pp512</td><td class=n>528.3</td><td class=n>528.8</td><td class=n>525.2</td><td class=n>-1%</td></tr><tr><th scope=row>ROCm</th><td>pp4096</td><td class=n>494.1</td><td class=n>483.7</td><td class=n>627.9</td><td class=n>+27%</td></tr><tr><th scope=row>ROCm</th><td>tg128</td><td class=n>19.3</td><td class=n>19.3</td><td class=n>19.3</td><td class=n>+0%</td></tr></tbody></table></div></details><details><summary>gpt-oss-120b</summary><div class=scroll><table><thead><tr><th>Backend</th><th>Test</th><th class=n>-ub 512</th><th class=n>-ub 1024</th><th class=n>-ub 2048</th><th class=n>2048 vs 512</th></tr></thead><tbody><tr><th scope=row>Vulkan</th><td>pp512</td><td class=n>280.2</td><td class=n>279.7</td><td class=n>275.3</td><td class=n>-2%</td></tr><tr><th scope=row>Vulkan</th><td>pp4096</td><td class=n>277.1</td><td class=n>332.4</td><td class=n>371.7</td><td class=n>+34%</td></tr><tr><th scope=row>Vulkan</th><td>tg128</td><td class=n>13.7</td><td class=n>13.7</td><td class=n>13.7</td><td class=n>+0%</td></tr><tr><th scope=row>ROCm</th><td>pp512</td><td class=n>290.7</td><td class=n>289.9</td><td class=n>289.9</td><td class=n>-0%</td></tr><tr><th scope=row>ROCm</th><td>pp4096</td><td class=n>289.7</td><td class=n>239.2</td><td class=n>425.2</td><td class=n>+47%</td></tr><tr><th scope=row>ROCm</th><td>tg128</td><td class=n>14.0</td><td class=n>13.9</td><td class=n>13.9</td><td class=n>-0%</td></tr></tbody></table></div></details><details><summary>Ornith-1.5 9B</summary><div class=scroll><table><thead><tr><th>Backend</th><th>Test</th><th class=n>-ub 512</th><th class=n>-ub 1024</th><th class=n>-ub 2048</th><th class=n>2048 vs 512</th></tr></thead><tbody><tr><th scope=row>Vulkan</th><td>pp512</td><td class=n>432.2</td><td class=n>436.4</td><td class=n>437.3</td><td class=n>+1%</td></tr><tr><th scope=row>Vulkan</th><td>pp4096</td><td class=n>432.2</td><td class=n>429.3</td><td class=n>415.0</td><td class=n>-4%</td></tr><tr><th scope=row>Vulkan</th><td>tg128</td><td class=n>14.2</td><td class=n>14.2</td><td class=n>14.2</td><td class=n>+0%</td></tr><tr><th scope=row>ROCm</th><td>pp512</td><td class=n>428.7</td><td class=n>459.9</td><td class=n>461.4</td><td class=n>+8%</td></tr><tr><th scope=row>ROCm</th><td>pp4096</td><td class=n>435.2</td><td class=n>399.1</td><td class=n>366.6</td><td class=n>-16%</td></tr><tr><th scope=row>ROCm</th><td>tg128</td><td class=n>14.2</td><td class=n>14.2</td><td class=n>14.2</td><td class=n>+0%</td></tr><tr><th scope=row>Vulkan (no FA)</th><td>pp512</td><td class=n>411.7</td><td class=n>430.7</td><td class=n>429.8</td><td class=n>+4%</td></tr><tr><th scope=row>Vulkan (no FA)</th><td>pp4096</td><td class=n>400.9</td><td class=n>409.7</td><td class=n>392.5</td><td class=n>-2%</td></tr><tr><th scope=row>Vulkan (no FA)</th><td>tg128</td><td class=n>14.2</td><td class=n>14.2</td><td class=n>14.2</td><td class=n>+0%</td></tr><tr><th scope=row>ROCm (no FA)</th><td>pp512</td><td class=n>420.9</td><td class=n>456.5</td><td class=n>458.6</td><td class=n>+9%</td></tr><tr><th scope=row>ROCm (no FA)</th><td>pp4096</td><td class=n>415.3</td><td class=n>401.4</td><td class=n>381.2</td><td class=n>-8%</td></tr><tr><th scope=row>ROCm (no FA)</th><td>tg128</td><td class=n>14.0</td><td class=n>14.0</td><td class=n>14.0</td><td class=n>+0%</td></tr></tbody></table></div></details><details><summary>GLM-4.5-Air</summary><div class=scroll><table><thead><tr><th>Backend</th><th>Test</th><th class=n>-ub 512</th><th class=n>-ub 1024</th><th class=n>-ub 2048</th><th class=n>2048 vs 512</th></tr></thead><tbody><tr><th scope=row>Vulkan</th><td>pp512</td><td class=n>160.7</td><td class=n>160.9</td><td class=n>161.6</td><td class=n>+1%</td></tr><tr><th scope=row>Vulkan</th><td>pp4096</td><td class=n>149.7</td><td class=n>177.4</td><td class=n>193.1</td><td class=n>+29%</td></tr><tr><th scope=row>Vulkan</th><td>tg128</td><td class=n>8.7</td><td class=n>8.7</td><td class=n>8.7</td><td class=n>+0%</td></tr><tr><th scope=row>ROCm</th><td>pp512</td><td class=n>132.1</td><td class=n>130.9</td><td class=n>133.9</td><td class=n>+1%</td></tr><tr><th scope=row>ROCm</th><td>pp4096</td><td class=n>113.7</td><td class=n>182.1</td><td class=n>185.2</td><td class=n>+63%</td></tr><tr><th scope=row>ROCm</th><td>tg128</td><td class=n>8.4</td><td class=n>8.4</td><td class=n>8.4</td><td class=n>+0%</td></tr></tbody></table></div></details><details><summary>Qwen3.8-27B</summary><div class=scroll><table><thead><tr><th>Backend</th><th>Test</th><th class=n>-ub 512</th><th class=n>-ub 1024</th><th class=n>-ub 2048</th><th class=n>2048 vs 512</th></tr></thead><tbody><tr><th scope=row>Vulkan</th><td>pp512</td><td class=n>135.5</td><td class=n>138.6</td><td class=n>136.2</td><td class=n>+1%</td></tr><tr><th scope=row>Vulkan</th><td>pp4096</td><td class=n>146.8</td><td class=n>143.9</td><td class=n>142.1</td><td class=n>-3%</td></tr><tr><th scope=row>Vulkan</th><td>tg128</td><td class=n>4.7</td><td class=n>4.7</td><td class=n>4.7</td><td class=n>+0%</td></tr><tr><th scope=row>ROCm</th><td>pp512</td><td class=n>149.2</td><td class=n>161.1</td><td class=n>161.3</td><td class=n>+8%</td></tr><tr><th scope=row>ROCm</th><td>pp4096</td><td class=n>152.6</td><td class=n>152.5</td><td class=n>147.9</td><td class=n>-3%</td></tr><tr><th scope=row>ROCm</th><td>tg128</td><td class=n>4.7</td><td class=n>4.7</td><td class=n>4.7</td><td class=n>+0%</td></tr></tbody></table></div></details><details><summary>Llama 3.3 70B</summary><div class=scroll><table><thead><tr><th>Backend</th><th>Test</th><th class=n>-ub 512</th><th class=n>-ub 1024</th><th class=n>-ub 2048</th><th class=n>2048 vs 512</th></tr></thead><tbody><tr><th scope=row>Vulkan</th><td>pp512</td><td class=n>46.9</td><td class=n>47.6</td><td class=n>47.4</td><td class=n>+1%</td></tr><tr><th scope=row>Vulkan</th><td>tg32</td><td class=n>1.9</td><td class=n>1.9</td><td class=n>1.9</td><td class=n>+0%</td></tr><tr><th scope=row>ROCm</th><td>pp512</td><td class=n>58.4</td><td class=n>59.9</td><td class=n>59.8</td><td class=n>+2%</td></tr><tr><th scope=row>ROCm</th><td>tg32</td><td class=n>1.8</td><td class=n>1.8</td><td class=n>1.8</td><td class=n>-1%</td></tr></tbody></table></div></details></div>
+</section>
+
+<footer>
+  <p>Method: each server run gets a unique prompt prefix so no prompt cache is reused; one warm-up, then the measured runs, context 16384. Engines run one at a time with the power profile set to performance. Measured with <code>scripts/bench-vs-ollama.py</code> and <code>llama-bench</code> from branch mev_ryzen370 (master a946eb541 plus the Ryzen AI scripts).</p>
+  <p>Raw data: data/models.csv, data/server_runs.csv, data/llama_bench.csv.</p>
+</footer>
+</div>
+<div id=tip hidden></div>
+<script>
+// per-bar hover tooltip; the <title> on each bar is the fallback without script
+(() => {
+  const tip = document.getElementById("tip");
+  document.querySelectorAll(".chart [data-tip]").forEach(el => {
+    el.querySelector("title")?.remove();
+    el.addEventListener("pointermove", e => {
+      tip.textContent = el.dataset.tip; tip.hidden = false;
+      const x = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8);
+      tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px";
+    });
+    el.addEventListener("pointerleave", () => { tip.hidden = true; });
+  });
+})();
+</script>
+</body>
+</html>
