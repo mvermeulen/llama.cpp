@@ -1,0 +1,31 @@
+model,backend,n_ubatch,flash_attn,test,before_tokens_per_s,after_tokens_per_s,after_stdev,change_pct
+gpt-oss-20b,Vulkan,2048,on,pp512,2522.12,2527.37,22.24,0.2
+gpt-oss-20b,Vulkan,2048,on,pp4096,2662.22,2738.63,1.84,2.9
+gpt-oss-20b,Vulkan,2048,on,tg128,81.15,80.69,0.08,-0.6
+gpt-oss-120b,Vulkan,2048,on,pp512,1150.22,1162.35,5.68,1.1
+gpt-oss-120b,Vulkan,2048,on,pp4096,1534.58,1574.29,14.84,2.6
+gpt-oss-120b,Vulkan,2048,on,tg128,57.27,57.33,0.05,0.1
+Qwen3-Coder-Next 80B-A3B,Vulkan,2048,on,pp512,1062.78,1072.90,3.64,1.0
+Qwen3-Coder-Next 80B-A3B,Vulkan,2048,on,pp4096,1453.93,1453.05,2.38,-0.1
+Qwen3-Coder-Next 80B-A3B,Vulkan,2048,on,tg128,59.30,59.69,0.14,0.7
+Qwen3.5-122B-A10B,Vulkan,2048,on,pp512,536.74,544.89,1.92,1.5
+Qwen3.5-122B-A10B,Vulkan,2048,on,pp4096,742.56,751.51,1.97,1.2
+Qwen3.5-122B-A10B,Vulkan,2048,on,tg128,28.11,28.37,0.02,0.9
+Nemotron-3-Super-120B-A12B,Vulkan,2048,on,pp512,430.95,432.83,2.27,0.4
+Nemotron-3-Super-120B-A12B,Vulkan,2048,on,pp4096,577.48,581.98,0.45,0.8
+Nemotron-3-Super-120B-A12B,Vulkan,2048,on,tg128,18.43,18.39,0.02,-0.2
+gpt-oss-20b,ROCm,2048,on,pp512,2185.27,2174.68,70.12,-0.5
+gpt-oss-20b,ROCm,2048,on,pp4096,2391.63,2394.75,2.48,0.1
+gpt-oss-20b,ROCm,2048,on,tg128,74.28,74.26,0.04,-0.0
+gpt-oss-120b,ROCm,2048,on,pp512,1154.51,1161.66,12.28,0.6
+gpt-oss-120b,ROCm,2048,on,pp4096,1358.58,1389.57,1.09,2.3
+gpt-oss-120b,ROCm,2048,on,tg128,52.35,52.36,0.03,0.0
+Qwen3-Coder-Next 80B-A3B,ROCm,2048,on,pp512,1153.96,1166.05,8.04,1.0
+Qwen3-Coder-Next 80B-A3B,ROCm,2048,on,pp4096,1199.13,1218.67,5.49,1.6
+Qwen3-Coder-Next 80B-A3B,ROCm,2048,on,tg128,56.76,56.80,0.02,0.1
+Qwen3.5-122B-A10B,ROCm,2048,on,pp512,611.20,613.10,3.76,0.3
+Qwen3.5-122B-A10B,ROCm,2048,on,pp4096,702.46,725.01,2.81,3.2
+Qwen3.5-122B-A10B,ROCm,2048,on,tg128,26.81,26.84,0.01,0.1
+Nemotron-3-Super-120B-A12B,ROCm,2048,on,pp512,479.08,482.53,1.19,0.7
+Nemotron-3-Super-120B-A12B,ROCm,2048,on,pp4096,530.48,532.56,1.54,0.4
+Nemotron-3-Super-120B-A12B,ROCm,2048,on,tg128,17.62,17.67,0.01,0.3
